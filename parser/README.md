@@ -1,8 +1,11 @@
 # Parser
 
-This submodule is about parsing and manipulating the raw data in order to create the dataset in a tabular format.
+This submodule is about parsing and manipulating the raw data in order to create the dataset in a tabular format (`csv`).
 
 ## Usage
+
+Use the parser directly from command line, just provide the `.jsonlines` file with raw data and the output directory.
+
 ```bash
 python parse_dataset.py -h
 optional arguments:
@@ -15,6 +18,7 @@ optional arguments:
 
 ### Working example
 ```bash
-python parse_dataset.py -i /path/to/comments.jsonlines
+python parse_dataset.py -i /path/to/comments.jsonlines -o ../export
 ```
+
 This script will create a collection of `.csv` files in `../export` folder.

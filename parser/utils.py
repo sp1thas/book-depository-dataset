@@ -101,17 +101,18 @@ While I was trying to master `scrapy` framework I came up with this project. I d
 
 ### Content
 
-This dataset contains more that 1 million books. Not the actual content of the book but a list of meta data like title, description, dimensions, categorization and others. Please find below an extensive list of fields for every book.:
+This dataset contains more that 1 million books. Not the actual content of the book but a list of meta data like title, description, dimensions, categorization and others. Please find below an extensive list of fields for every book:
+
 {}
 
 ### Acknowledgements
 
-I would like to thank bookdepository and specifically it's `robot.txt`
+I would like to thank bookdepository and specifically it's [`robots.txt`](https://bookdepository.com/robots.txt)
 
 
 ### Inspiration
 
-This dataset could be used for NLP, Text Classification and others.
+This dataset could be used for NLP, Text Classification and other tasks. Any feedback regarding dataset is more than welcomed.
 """.format('\n'.join(
     ' * `{}`: {}'.format(k, v) for k, v in keep_cols.items()
 ))
