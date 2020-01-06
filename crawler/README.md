@@ -1,5 +1,5 @@
 ## Bookdepository crawler
-![python-version](https://img.shields.io/badge/python-3.6%2B-blue) ![scrapy-version](https://img.shields.io/badge/Scrapy-1.8.0%2B-green)
+![scrapy-version](https://img.shields.io/badge/Scrapy-1.8.0%2B-green)
 
 This scrapy project is used to extract the majority of books from bookdepository. If you want to extract the data on your own, please keep settings file as is.
 
