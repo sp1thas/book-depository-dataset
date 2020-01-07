@@ -9,6 +9,7 @@ from typing import NoReturn, Dict, List, Union, Any, Tuple
 import jsonlines
 import pandas as pd
 from utils import keep_cols, lang_mapping, kaggle_description
+from tqdm import tqdm
 
 
 class BookParser:
@@ -52,7 +53,7 @@ class BookParser:
     dupl = set()
     cols = set()
     c = 0
-
+    n_rows = 0
     def __init__(self, input_file: str, output_folder: str) -> NoReturn:
         self.input_file = input_file
         self.output_folder = output_folder
@@ -63,8 +64,12 @@ class BookParser:
         self.wr.writerow([_ for _ in keep_cols])
 
     def run(self):
-        with jsonlines.open(self.input_file) as rd:
+        with open(self.input_file, 'r') as rd:
             for row in rd:
+                self.n_rows +=1
+
+        with jsonlines.open(self.input_file) as rd:
+            for row in tqdm(rd, total=self.n_rows):
                 parsed = self.parse_entry(row)
                 if not all((
                     parsed.get('id'), parsed.get('isbn10')

@@ -4,3 +4,4 @@ pandas==0.25.3
 python-slugify==4.0.0
 Scrapy==1.8.0
 jupyter==1.0.0
+tqdm==4.41.1
