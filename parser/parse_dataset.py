@@ -135,6 +135,9 @@ class BookParser:
         self.wr.writerow(row)
 
     def extract_publish_place(self, place):
+        if not place:
+            return None
+        place = place.strip()
         if place in self.city_country2id:
             return self.city_country2id[place]
         else:
