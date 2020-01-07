@@ -137,7 +137,7 @@ class BookParser:
     def extract_publish_place(self, place):
         if not place:
             return None
-        place = place.strip()
+        place = str(place).strip()
         if place in self.city_country2id:
             return self.city_country2id[place]
         else:
