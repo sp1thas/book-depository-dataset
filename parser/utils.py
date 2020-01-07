@@ -36,6 +36,7 @@ keep_cols = OrderedDict((k, keep_cols[k]) for k in sort_cols)
 
 lang_mapping = {
     'English': 'en',
+    'Navajo': 'nv',
     'Spanish': 'es',
     'French': 'fr',
     'German': 'de',
