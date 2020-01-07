@@ -5,8 +5,6 @@ The source code of `Book Depository Dataset`. Here you will find the implementat
 
 Dataset is also available [here](https://www.kaggle.com/sp1thas/book-depository-dataset/) as kaggle dataset
 
-[![dataset-cover-photo](https://storage.googleapis.com/kaggle-datasets-images/467291/877013/f6b046f1fdf94cec8171de6bec6bdb47/dataset-cover.jpg)](https://www.kaggle.com/sp1thas/book-depository-dataset/)
-
 ## Projects Structure
 
  * **crawler**: scrapy crawler for data extraction
