@@ -49,11 +49,13 @@ class BookParser:
     format_id = 0
     city_country2id = {}
     city_i = 0
+    missing_languages = set()
 
     dupl = set()
     cols = set()
     c = 0
     n_rows = 0
+
     def __init__(self, input_file: str, output_folder: str) -> NoReturn:
         self.input_file = input_file
         self.output_folder = output_folder
@@ -118,7 +120,6 @@ class BookParser:
     def extract_relative_url(self, url):
         if url:
             return re.findall(self.re_url, url)[0]
-
 
     def write_entry(self, entry: Dict[str, Any]) -> NoReturn:
         row = []
@@ -194,8 +195,7 @@ class BookParser:
             self.id2format[self.format_id] = frmt
         return self.format2id[frmt]
 
-    @staticmethod
-    def extract_lang(lang: str) -> List[str]:
+    def extract_lang(self, lang: str) -> List[str]:
         """
         Extract language code from raw text
         :param lang: language raw text
@@ -206,10 +206,13 @@ class BookParser:
             return []
         langs = []
         for lng in lang.split(','):
+            lng = lng.strip()
             if lng in lang_mapping:
-                langs.append(lang_mapping[lng.strip()])
+                langs.append(lang_mapping[lng])
             else:
-                print('\nmissing language: {}\n'.format(lng))
+                if lng not in self.missing_languages:
+                    print('\nmissing language: {}\n'.format(lng))
+                    self.missing_languages.add(lng)
         return langs
 
     def extract_id(self, url: str) -> Union[None, str]:
