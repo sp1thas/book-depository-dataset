@@ -206,7 +206,10 @@ class BookParser:
             return []
         langs = []
         for lng in lang.split(','):
-            langs.append(lang_mapping[lng.strip()])
+            if lng in lang_mapping:
+                langs.append(lang_mapping[lng.strip()])
+            else:
+                print('\nmissing language: {}\n'.format(lng))
         return langs
 
     def extract_id(self, url: str) -> Union[None, str]:
