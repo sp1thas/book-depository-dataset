@@ -301,14 +301,18 @@ class BookParser:
             entry['isbn10'] = entry.pop('ISBN13')
 
         entry['dimensions'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
+        try:
+            entry['publication-date'] = datetime.datetime.strptime(
+                entry['publication-date'], '%Y-%m-%d %H:%M:%S'
+            ).strftime('%Y-%m-%d') if entry.get('publication-date') else None
+        except:
+            entry['publication-date'] = None
+
         entry.update({
             'categories': categories__,
             'authors': authors__,
             'format': self.extract_format(entry.pop('format', '')),
             'lang': self.extract_lang(entry.pop('language', '')),
-            'publication-date': datetime.datetime.strptime(
-                entry['publication-date'], '%Y-%m-%d %H:%M:%S'
-            ).strftime('%Y-%m-%d') if entry.get('publication-date') else None
         })
 
         c = tuple(entry.keys())
