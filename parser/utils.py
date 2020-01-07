@@ -10,9 +10,9 @@ keep_cols = {
     'bestsellers-rank': 'Bestsellers ranking (`int`)',
     'categories': 'Book\'s categories. Check `authors.csv` for mapping (`list of int`)',
     'description': "Book's description (`str`)",
-    'edition': '',
-    'edition-statement': '',
-    'for-ages': 'Book\'s ',
+    'edition': 'Edition (`str`)',
+    'edition-statement': 'Edition statement (`str`)',
+    'for-ages': 'Range of ages (`str`)',
     'format': "Book's format. Check `formats.csv` for mapping (`int`)",
     'illustrations-note': '',
     'imprint': '',
@@ -109,14 +109,14 @@ lang_mapping = {
     None: None
 }
 
-kaggle_description = """### Context
+kaggle_description = """### Contextin order
 
 While I was trying to master `scrapy` framework I came up with this project. I decided to create a large dataset of books.
 
 
 ### Content
 
-This dataset contains more that 1 million books. Not the actual content of the book but a list of meta data like title, description, dimensions, categorization and others. Please find below an extensive list of fields for every book:
+This dataset contains books from [bookdepository.com](https://bookdepository.com), not the actual content of the book but a list of meta data like title, description, dimensions, categorization and others. Please find below an extensive list of fields for every book:
 
 {}
 

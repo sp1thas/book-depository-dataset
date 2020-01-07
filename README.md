@@ -21,4 +21,4 @@ Dataset is also available [here](https://www.kaggle.com/sp1thas/book-depository-
 
 ## Disclaimer
 
-All books are hosted by [bookdepository.com](https://bookdepository.com). The the use of dataset is fair use for academic purposes.
+All books are hosted by [bookdepository.com](https://bookdepository.com). The use of dataset is fair use for academic purposes.
