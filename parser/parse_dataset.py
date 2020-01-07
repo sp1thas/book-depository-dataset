@@ -37,6 +37,7 @@ class BookParser:
     re_w = re.compile(r"([\d.,]+)g")
     re_format = re.compile(r'\w+')
     re_id = re.compile(r'/(\d+)/')
+    re_url = re.compile(r'bookdepository.com([\w\-_\d\/]+)[\?^]?')
 
     id2author = {}
     author2id = {}
@@ -45,6 +46,8 @@ class BookParser:
     id2format = {}
     categories = {}
     format_id = 0
+    city_country2id = {}
+    city_i = 0
 
     dupl = set()
     cols = set()
@@ -63,37 +66,41 @@ class BookParser:
         with jsonlines.open(self.input_file) as rd:
             for row in rd:
                 parsed = self.parse_entry(row)
-                if not parsed.get('isbn10'):
+                if not all((
+                    parsed.get('id'), parsed.get('isbn10')
+                )):
                     continue
-                try:
-                    if parsed['isbn10'] in self.dupl:
-                        continue
-                    else:
-                        self.dupl.add(parsed['isbn10'])
-                except Exception as e:
-                    pprint(parsed)
-                    break
+                if parsed['id'] in self.dupl:
+                    continue
+                else:
+                    self.dupl.add(parsed['id'])
 
-                if self.c > 1000:
-                    break
-                if parsed:
-                    self.write_entry(parsed)
-
-        pd.DataFrame([{'author_id': int(k), 'author_name': v} for k, v in self.id2author.items()]).to_csv(
-            os.path.join(self.output_folder, 'authors.csv'),
-            index=False)
-        pd.DataFrame([{'category_id': int(k), 'category_name': v} for k, v in self.categories.items()]).to_csv(
-            os.path.join(self.output_folder, 'categories.csv'), index=False)
-        pd.DataFrame([{'format_id': int(k), 'format_name': v} for k, v in self.id2format.items()]).to_csv(
-            os.path.join(self.output_folder, 'formats.csv'),
-            index=False)
-        a = list(self.cols)
-        a.sort()
+                self.write_entry(parsed)
+        with open(os.path.join(self.output_folder, 'authors.csv'), 'w') as f:
+            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+            wr.writerow(['author_id', 'author_name'])
+            for k, v in sorted(self.author2id.items(), key=lambda item: item[0]):
+                wr.writerow([v, k])
+        with open(os.path.join(self.output_folder, 'categories.csv'), 'w') as f:
+            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+            wr.writerow(['category_id', 'category_name'])
+            for k, v in sorted(self.categories.items(), key=lambda item: item[1]):
+                wr.writerow([k, v])
+        with open(os.path.join(self.output_folder, 'formats.csv'), 'w') as f:
+            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+            wr.writerow(['format_id', 'format_name'])
+            for k, v in sorted(self.id2format.items(), key=lambda item: item[1]):
+                wr.writerow([k, v])
+        with open(os.path.join(self.output_folder, 'places.csv'), 'w') as f:
+            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+            wr.writerow(['place_id', 'place_name'])
+            for k, v in sorted(self.city_country2id.items(), key=lambda item: item[0]):
+                wr.writerow([v, k])
 
         with open(os.path.join(self.output_folder, 'KAGGLE_README.md'), 'w') as f:
             f.write(kaggle_description)
 
-        print(self.cols)
+        print(self.cols - set(keep_cols.keys()))
         self.close()
 
     def close(self):
@@ -102,6 +109,11 @@ class BookParser:
         :return:
         """
         self.f.close()
+
+    def extract_relative_url(self, url):
+        if url:
+            return re.findall(self.re_url, url)[0]
+
 
     def write_entry(self, entry: Dict[str, Any]) -> NoReturn:
         row = []
@@ -115,6 +127,14 @@ class BookParser:
                 v = json.dumps(v)
             row.append(v)
         self.wr.writerow(row)
+
+    def extract_publish_place(self, place):
+        if place in self.city_country2id:
+            return self.city_country2id[place]
+        else:
+            self.city_i += 1
+            self.city_country2id[place] = self.city_i
+            return self.city_country2id[place]
 
     def extract_dimensions(self, dims: str) -> Tuple[Dict[str, Union[float, None]], Union[float, None]]:
         """
@@ -209,6 +229,8 @@ class BookParser:
         """
         if entry.get('_id'):
             entry['id'] = entry.pop('_id')
+        if entry.get('indexed-date'):
+            entry['index-date'] = entry.pop('indexed-date')
         if not entry['id']:
             entry['id'] = self.extract_id(entry['url'])
         if entry.get('rating-avg', None) is None:
@@ -224,6 +246,12 @@ class BookParser:
         else:
             entry['bestsellers-rank'] = int(entry['bestsellers-rank'])
 
+        if entry.get('url'):
+            entry['url'] = self.extract_relative_url(entry.pop('url'))
+
+        if entry.get('publication-city-country'):
+            entry['publication-place'] = self.extract_publish_place(entry.pop('publication-city-country'))
+            # break
         categories__ = []
 
         categories_labels = entry.pop('categories', [])
