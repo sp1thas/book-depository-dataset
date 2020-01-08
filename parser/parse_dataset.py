@@ -8,9 +8,9 @@ from pprint import pprint
 from typing import NoReturn, Dict, List, Union, Any, Tuple
 import jsonlines
 import pandas as pd
-from utils import keep_cols, lang_mapping, kaggle_description
+from utils import keep_cols, kaggle_description
 from tqdm import tqdm
-
+import langcodes
 
 class BookParser:
     """
@@ -210,12 +210,15 @@ class BookParser:
         langs = []
         for lng in lang.split(','):
             lng = lng.strip()
-            if lng in lang_mapping:
-                langs.append(lang_mapping[lng])
-            else:
-                if lng not in self.missing_languages:
-                    print('\nmissing language: {}\n'.format(lng))
-                    self.missing_languages.add(lng)
+            if lng:
+                try:
+                    langs.append(langcodes.find(lng).language)
+                except LookupError:
+                    if lng in self.missing_languages:
+                        pass
+                    else:
+                        self.missing_languages.add(lng)
+                        print('unknown language: {}'.format(lng))
         return langs
 
     def extract_id(self, url: str) -> Union[None, str]:
