@@ -34,14 +34,14 @@ sort_cols = list(keep_cols.keys())
 sort_cols.sort()
 keep_cols = OrderedDict((k, keep_cols[k]) for k in sort_cols)
 
-kaggle_description = """### Contextin order
+kaggle_description = """### Context
 
-While I was trying to master `scrapy` framework I came up with this project. I decided to create a large dataset of books.
+While I was trying to master `scrapy` framework I came up with this project. This is a large collection of books, scraped from bookdepository.com. [sp1thas/book-depository-dataset](https://github.com/sp1thas/book-depository-dataset) repository contains the implementation of this dataset. Feel free to contribute in any way.
 
 
 ### Content
 
-This dataset contains books from [bookdepository.com](https://bookdepository.com), not the actual content of the book but a list of meta data like title, description, dimensions, categorization and others. Please find below an extensive list of fields for every book:
+This dataset contains books from [bookdepository.com](https://bookdepository.com), not the actual content of the book but a list of metadata like title, description, dimensions, category and others. Please find below an extensive list of fields for every sample:
 
 {}
 
@@ -52,7 +52,7 @@ I would like to thank bookdepository and specifically it's [`robots.txt`](https:
 
 ### Inspiration
 
-This dataset could be used for NLP, Text Classification and other tasks. Any feedback regarding dataset is more than welcomed.
+This dataset could be used for NLP, Text Classification and other tasks. Any feedback regarding dataset is more than welcome.
 """.format('\n'.join(
     ' * `{}`: {}'.format(k, v) for k, v in keep_cols.items()
 ))
