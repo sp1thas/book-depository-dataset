@@ -17,6 +17,18 @@ Dataset is also available [here](https://www.kaggle.com/sp1thas/book-depository-
  1. Run scrapy crawler in order to retrieve data from `bookdepository.com`
  2. Run parser in order to create the dataset
 
+## Citation
+```
+ @misc{simakis_2020,
+	title={Book Depository Dataset},
+	url={https://www.kaggle.com/ds/467291},
+	DOI={10.34740/kaggle/ds/467291},
+	publisher={Kaggle},
+	author={Simakis, Panagiotis},
+	year={2020}
+}
+```
+
 ## Disclaimer
 
 All books are hosted by [bookdepository.com](https://bookdepository.com). The use of dataset is fair use for academic purposes.
