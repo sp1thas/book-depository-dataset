@@ -4,13 +4,12 @@ import datetime
 import json
 import os
 import re
-from pprint import pprint
 from typing import NoReturn, Dict, List, Union, Any, Tuple
 import jsonlines
-import pandas as pd
 from utils import keep_cols, kaggle_description
 from tqdm import tqdm
 import langcodes
+
 
 class BookParser:
     """
@@ -154,28 +153,30 @@ class BookParser:
         :rype: tuple
         """
         dims = dims.strip()
+        x = None
+        y = None
+        z = None
+        w = None
         if not dims:
-            return {'x': None, 'y': None, 'z': None}, None
+            return x, y, z, w
         try:
             x = float(re.findall(self.re_dim_x, dims)[0].replace(',', ''))
         except Exception as e:
-            x = None
             print('{}\n{}\n{}'.format(e, 'x not found', dims))
         try:
             y = float(re.findall(self.re_dim_y, dims)[0].replace(',', ''))
         except Exception as e:
-            y = None
+            pass
             # print('{}\n{}\n{}'.format(e, 'y not found', dims))
         try:
             z = float(re.findall(self.re_dim_z, dims)[0].replace(',', ''))
         except Exception as e:
-            z = None
             print('{}\n{}\n{}'.format(e, 'z not found', dims))
         try:
             w = float(re.findall(self.re_w, dims)[0].replace(',', ''))
         except Exception as e:
-            w = None
-        return {'x': x, 'y': y, 'z': z}, w
+            pass
+        return x, y, z, w
 
     def extract_format(self, frmt: str) -> Union[int, None]:
         """
@@ -306,7 +307,8 @@ class BookParser:
         if 'ISBN13' in entry:
             entry['isbn10'] = entry.pop('ISBN13')
 
-        entry['dimensions'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
+        entry['dimension_x'], entry['dimension_y'], entry['dimension_z'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
+
         try:
             entry['publication-date'] = datetime.datetime.strptime(
                 entry['publication-date'], '%Y-%m-%d %H:%M:%S'
