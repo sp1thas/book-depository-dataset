@@ -307,7 +307,7 @@ class BookParser:
         if 'ISBN13' in entry:
             entry['isbn10'] = entry.pop('ISBN13')
 
-        entry['dimension_x'], entry['dimension_y'], entry['dimension_z'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
+        entry['dimension-x'], entry['dimension-y'], entry['dimension-z'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
 
         try:
             entry['publication-date'] = datetime.datetime.strptime(
