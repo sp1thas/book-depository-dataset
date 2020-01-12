@@ -36,7 +36,7 @@ keep_cols = {
     'rating-count': 'Number of ratings',
     'weight': 'Book\'s weight (in kgr)',
     'url': 'Book relative url (https://bookdepository.com + `url`)',
-    'publisher': 'Publisher (`str`)',
+    # 'publisher': 'Publisher (`str`)',
 
 }
 sort_cols = list(keep_cols.keys())
