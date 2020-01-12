@@ -209,17 +209,17 @@ class BookParser:
         if not lang.strip():
             return []
         langs = []
-        for lng in lang.split(','):
-            lng = lng.strip()
-            if lng:
-                try:
-                    langs.append(langcodes.find(lng).language)
-                except LookupError:
-                    if lng in self.missing_languages:
-                        pass
-                    else:
-                        self.missing_languages.add(lng)
-                        print('unknown language: {}'.format(lng))
+        # for lng in lang.split(','):
+        lng = lang.strip()
+        if lng:
+            try:
+                langs.append(langcodes.find(lng).language)
+            except LookupError:
+                if lng in self.missing_languages:
+                    pass
+                else:
+                    self.missing_languages.add(lng)
+                    print('unknown language: {}'.format(lng))
         return langs
 
     def extract_id(self, url: str) -> Union[None, str]:

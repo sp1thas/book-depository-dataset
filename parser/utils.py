@@ -1,5 +1,14 @@
 from collections import OrderedDict
 
+lang_mapping = {
+    'Ancient (to 1453)': 'grc',
+    'Modern (1453-)': 'el',
+    'Middle (1100-1500)': 'enm',
+    'Old (ca.450-1100)': 'ang',
+    'Middle High (ca.1050-1500)': 'gmh',
+
+}
+
 keep_cols = {
     'id': "Book's unique id (`int`)",
     'isbn10': "Book's ISBN-10 (`str`)",
