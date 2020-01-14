@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+import json
 
 # Scrapy settings for bdepo project
 #
@@ -26,7 +28,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 0.75
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -64,7 +66,9 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'bdepo.pipelines.BdepoPipeline': 100
+    'bdepo.pipelines.BdepoPipeline': 100,
+    'bdepo.pipelines.MongoPipeline': 300,
+
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -92,3 +96,13 @@ ITEM_PIPELINES = {
 # CLOSESPIDER_ITEMCOUNT = 10
 
 LOG_LEVEL = "INFO"
+
+
+MONGO_URI = None
+MONGO_DATABASE = None
+
+if os.path.exists('bdepo/creds.json'):
+    with open('bdepo/creds.json') as f:
+        creds = json.load(f)
+        MONGO_URI = creds['MONGO_URI']
+        MONGO_DATABASE = creds['MONGO_DATABASE']

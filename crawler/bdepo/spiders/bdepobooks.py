@@ -2,13 +2,27 @@
 import datetime
 import logging
 import re
-
 import scrapy
+from scrapy.utils.project import get_project_settings
+import pymongo
+from bson import ObjectId
+from random import shuffle
+import logging
+
+settings = get_project_settings()
 
 
 class BdepobooksSpider(scrapy.Spider):
     name = 'bdepobooks'
     allowed_domains = ['bookdepository.com']
+
+    client = None
+    if settings['MONGO_URI']:
+        client = pymongo.MongoClient(settings['MONGO_URI'])
+        db = client[settings['MONGO_DATABASE']]
+        col = db['dataset']
+
+
     start_urls = [
         'https://www.bookdepository.com/category/2/Art-Photography',
         'https://www.bookdepository.com/category/3389/Audio-Books',
@@ -46,6 +60,7 @@ class BdepobooksSpider(scrapy.Spider):
         'https://www.bookdepository.com/category/2967/Transport',
         'https://www.bookdepository.com/category/3098/Travel-Holiday-Guides'
     ]
+    shuffle(start_urls)
 
     def parse(self, response):
         for subcategory_url in response.xpath(
@@ -55,7 +70,25 @@ class BdepobooksSpider(scrapy.Spider):
 
     def parse_subcategory(self, response):
         for book_url in response.xpath('//div[@class="book-item"]//h3/a/@href').getall():
-            yield scrapy.Request(url='https://www.bookdepository.com' + book_url, callback=self.parse_book)
+            book_url = 'https://www.bookdepository.com' + book_url
+            book_id = re.findall(r'\/(\d+)', book_url)
+            if book_id:
+                book_id = book_id[0]
+            else:
+                logging.error('could not extract book id from url: {}'.format(book_url))
+                continue
+            try:
+                d = self.col.find_one({"_id": int(book_id)})
+            except Exception as e:
+                print('error {}'.format(book_id))
+                d = -1
+            if d == -1:
+                continue
+            elif d:
+                logging.debug('{} already harvested {}'.format(book_id, book_url))
+                continue
+            else:
+                yield scrapy.Request(url=book_url, callback=self.parse_book)
 
         next_href = response.xpath('//li[@id="next-top"]/a/@href').extract_first()
         if next_href:

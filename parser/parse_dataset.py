@@ -207,7 +207,7 @@ class BookParser:
         :rtype: list
         """
         if not lang.strip():
-            return []
+            return None
         lng = lang.strip()
         if lng:
             try:

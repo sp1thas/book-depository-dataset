@@ -7,6 +7,7 @@
 from scrapy.exceptions import DropItem
 from slugify import slugify
 from dateparser import parse
+import pymongo
 import re
 
 
@@ -14,14 +15,19 @@ class BdepoPipeline(object):
     """
     Main pipeline class for book item parsing
     """
-    @staticmethod
     def process_item(self, item, spider):
-        if not (item.get('_id') or item.get('title')):
-            raise DropItem('Missing Values: {}'.format(item.get('url')))
-
         _id = item['_id']
         for k in item.keys():
-            item[slugify(k)] = item.pop(k)
+            item[slugify(k.lower())] = item.pop(k)
+
+        if not all((
+            _id,
+            item.get('title'),
+            item.get('description'),
+            item.get('url'),
+        )):
+            raise DropItem('Missing Values: {}'.format(item.get('url')))
+
         item['_id'] = _id
         keys = item.keys()
 
@@ -70,4 +76,37 @@ class BdepoPipeline(object):
         else:
             item['price'] = None
 
+        return item
+
+
+class MongoPipeline(object):
+
+    collection_name = 'dataset'
+
+    def __init__(self, mongo_uri, mongo_db):
+        self.mongo_uri = mongo_uri
+        self.mongo_db = mongo_db
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(
+            mongo_uri=crawler.settings.get('MONGO_URI'),
+            mongo_db=crawler.settings.get('MONGO_DATABASE', 'items')
+        )
+
+    def open_spider(self, spider):
+        self.client = pymongo.MongoClient(self.mongo_uri)
+        self.db = self.client[self.mongo_db]
+
+    def close_spider(self, spider):
+        self.client.close()
+
+    def process_item(self, item, spider):
+        try:
+            self.db['dataset'].insert_one({
+                '_id': int(item['id']),
+                'ok': True
+            })
+        except Exception as e:
+            print(e, print(item))
         return item
