@@ -4,3 +4,4 @@ venv/
 *.jsonlines
 *.csv
 export/
+creds.json
