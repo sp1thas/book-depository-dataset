@@ -110,6 +110,7 @@ class MongoPipeline(object):
                 '_id': int(item['_id']),
                 'ok': True
             })
-            return item
         except:
             DropItem('Item Already Exists {}'.format(item['_id']))
+        finally:
+            return item
