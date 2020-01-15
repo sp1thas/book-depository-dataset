@@ -95,7 +95,7 @@ ITEM_PIPELINES = {
 # close spider (for testing purposes)
 # CLOSESPIDER_ITEMCOUNT = 10
 
-LOG_LEVEL = "INFO"
+LOG_LEVEL = "ERROR"
 
 
 MONGO_URI = None

@@ -23,7 +23,7 @@ class BdepoPipeline(object):
         if not all((
             _id,
             item.get('title'),
-            item.get('description'),
+            # item.get('description'),
             item.get('url'),
         )):
             raise DropItem('Missing Values: {}'.format(item.get('url')))
