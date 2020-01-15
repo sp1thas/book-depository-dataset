@@ -8,6 +8,7 @@ from scrapy.exceptions import DropItem
 from slugify import slugify
 from dateparser import parse
 import pymongo
+from pymongo.errors import DuplicateKeyError
 import re
 
 
@@ -104,8 +105,11 @@ class MongoPipeline(object):
     def process_item(self, item, spider):
         # if not item:
         #     DropItem('Empty item: {}'.format(item))
-        self.db['dataset'].insert_one({
-            '_id': int(item['_id']),
-            'ok': True
-        })
-        return item
+        try:
+            self.db['dataset'].insert_one({
+                '_id': int(item['_id']),
+                'ok': True
+            })
+            return item
+        except:
+            DropItem('Item Already Exists {}'.format(item['_id']))
