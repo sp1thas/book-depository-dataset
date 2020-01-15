@@ -102,13 +102,10 @@ class MongoPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        if not item:
-            DropItem('Empty item: {}'.format(item))
-        try:
-            self.db['dataset'].insert_one({
-                '_id': int(item['id']),
-                'ok': True
-            })
-        except Exception as e:
-            print(e, print(item))
+        # if not item:
+        #     DropItem('Empty item: {}'.format(item))
+        self.db['dataset'].insert_one({
+            '_id': int(item['_id']),
+            'ok': True
+        })
         return item
