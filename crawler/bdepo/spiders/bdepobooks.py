@@ -81,8 +81,8 @@ class BdepobooksSpider(scrapy.Spider):
                 d = self.col.find_one({"_id": int(book_id)})
             except Exception as e:
                 print('error {}'.format(book_id))
-                d = -1
-            if d == -1:
+                d = False
+            if d is False:
                 continue
             elif d:
                 logging.debug('{} already harvested {}'.format(book_id, book_url))

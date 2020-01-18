@@ -8,6 +8,7 @@ from scrapy.exceptions import DropItem
 from slugify import slugify
 from dateparser import parse
 import pymongo
+from pymongo.errors import DuplicateKeyError
 import re
 
 
@@ -23,7 +24,7 @@ class BdepoPipeline(object):
         if not all((
             _id,
             item.get('title'),
-            item.get('description'),
+            # item.get('description'),
             item.get('url'),
         )):
             raise DropItem('Missing Values: {}'.format(item.get('url')))
@@ -102,11 +103,14 @@ class MongoPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
+        # if not item:
+        #     DropItem('Empty item: {}'.format(item))
         try:
             self.db['dataset'].insert_one({
-                '_id': int(item['id']),
+                '_id': int(item['_id']),
                 'ok': True
             })
-        except Exception as e:
-            print(e, print(item))
-        return item
+        except:
+            DropItem('Item Already Exists {}'.format(item['_id']))
+        finally:
+            return item
