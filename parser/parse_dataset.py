@@ -51,6 +51,19 @@ class BookParser:
     city_i = 0
     missing_languages = set()
 
+
+    new_ugc = 0
+    new_places = 0
+    new_authors = 0
+    new_categories = 0
+    new_formats = 0
+
+    total_ugc = 0
+    total_places = 0
+    total_authors = 0
+    total_categories = 0
+    total_formats = 0
+
     dupl = set()
     cols = set()
     c = 0
@@ -61,12 +74,11 @@ class BookParser:
         self.output_folder = output_folder
         self.dataset_path = dataset
         self.harvested = set()
-        self.new_ugc = 0
-        self.total_ugc = 0
+
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
         if self.dataset_path and os.path.exists(self.dataset_path):
-            with open(self.dataset_path, 'r') as f:
+            with open(os.path.join(self.dataset_path, 'dataset.csv'), 'r') as f:
                 rd = csv.reader(f)
                 for header in rd:
                     break
@@ -78,10 +90,42 @@ class BookParser:
                     self.total_ugc += 1
 
             print('Harvested id successfully loaded')
-            shutil.copy(self.dataset_path, os.path.join(self.output_folder, 'dataset.csv'))
-            print('Existing dataset successfully copied: {} --> {}'.format(
-                self.dataset_path, os.path.join(self.output_folder, 'dataset.csv'))
-            )
+            for filename in ('dataset.csv', 'authors.csv', 'categories.csv', 'places.csv', 'formats.csv'):
+                shutil.copy(os.path.join(self.dataset_path, filename), os.path.join(self.output_folder, filename))
+                print('Successfully copied: {} --> {}'.format(
+                    self.dataset_path, os.path.join(self.output_folder, filename))
+                )
+            with open(os.path.join(self.output_folder, 'authors.csv'), 'r') as f:
+                rd = csv.reader(f)
+                for h in rd:
+                    name_2_index = {_: i for i, _ in enumerate(h)}
+                for row in rd:
+                    if row[name_2_index['author_name']]:
+                        self.author2id[row[name_2_index['author_name']]] = int(row[name_2_index['author_id']])
+            with open(os.path.join(self.output_folder, 'categories.csv'), 'r') as f:
+                rd = csv.reader(f)
+                for h in rd:
+                    name_2_index = {_: i for i, _ in enumerate(h)}
+                for row in rd:
+                    if row[name_2_index['category_name']]:
+                        self.categories[row[name_2_index['category_id']]] = row[name_2_index['category_name']]
+
+            with open(os.path.join(self.output_folder, 'places.csv'), 'r') as f:
+                rd = csv.reader(f)
+                for h in rd:
+                    name_2_index = {_: i for i, _ in enumerate(h)}
+                for row in rd:
+                    if row[name_2_index['place_name']]:
+                        self.city_country2id[row[name_2_index['place_name']]] = int(row[name_2_index['place_id']])
+
+            with open(os.path.join(self.output_folder, 'formats.csv'), 'r') as f:
+                rd = csv.reader(f)
+                for h in rd:
+                    name_2_index = {_: i for i, _ in enumerate(h)}
+                for row in rd:
+                    if row[name_2_index['format_name']]:
+                        self.id2format[int(row[name_2_index['format_id']])] = row[name_2_index['format_name']]
+
             self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'a')
             self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
         else:
