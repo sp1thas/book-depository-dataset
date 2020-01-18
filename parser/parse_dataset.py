@@ -4,11 +4,12 @@ import datetime
 import json
 import os
 import re
-from typing import NoReturn, Dict, List, Union, Any, Tuple
+from typing import Dict, List, Union, Any, Tuple
 import jsonlines
 from utils import keep_cols, kaggle_description
 from tqdm import tqdm
 import langcodes
+import shutil
 
 
 class BookParser:
@@ -55,14 +56,38 @@ class BookParser:
     c = 0
     n_rows = 0
 
-    def __init__(self, input_file: str, output_folder: str) -> NoReturn:
+    def __init__(self, input_file: str, output_folder: str, dataset: str) -> None:
         self.input_file = input_file
         self.output_folder = output_folder
+        self.dataset_path = dataset
+        self.harvested = set()
+        self.new_ugc = 0
+        self.total_ugc = 0
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
-        self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'w')
-        self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
-        self.wr.writerow([_ for _ in keep_cols])
+        if self.dataset_path and os.path.exists(self.dataset_path):
+            with open(self.dataset_path, 'r') as f:
+                rd = csv.reader(f)
+                for header in rd:
+                    break
+                self.col_to_index = {_: i for i, _ in enumerate(header)}
+                for row in rd:
+                    self.harvested.add(
+                        int(row[self.col_to_index['id']])
+                    )
+                    self.total_ugc += 1
+
+            print('Harvested id successfully loaded')
+            shutil.copy(self.dataset_path, os.path.join(self.output_folder, 'dataset.csv'))
+            print('Existing dataset successfully copied: {} --> {}'.format(
+                self.dataset_path, os.path.join(self.output_folder, 'dataset.csv'))
+            )
+            self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'a')
+            self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
+        else:
+            self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'w')
+            self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
+            self.wr.writerow([_ for _ in keep_cols])
 
     def run(self):
         with open(self.input_file, 'r') as rd:
@@ -107,6 +132,10 @@ class BookParser:
             f.write(kaggle_description)
 
         print(self.cols - set(keep_cols.keys()))
+        print('''
+          New UGC: {}
+        Total UGC: {}
+        '''.format(self.new_ugc, self.total_ugc))
         self.close()
 
     def close(self):
@@ -120,17 +149,22 @@ class BookParser:
         if url:
             return re.findall(self.re_url, url)[0]
 
-    def write_entry(self, entry: Dict[str, Any]) -> NoReturn:
+    def write_entry(self, entry: Dict[str, Any]):
         row = []
         if isinstance(entry.get('dimensions'), str):
             entry['dimensions'], entry['weight'] = self.extract_dimensions(entry['dimensions'])
         for k, v in entry.pop('dimensions', {}).items():
             entry['dimension_{}'.format(k)] = v
+
+        if int(entry['id']) in self.harvested:
+            return
         for k in keep_cols:
             v = entry.get(k)
             if isinstance(v, (list, dict)):
                 v = json.dumps(v)
             row.append(v)
+        self.total_ugc += 1
+        self.new_ugc += 1
         self.wr.writerow(row)
 
     def extract_publish_place(self, place):
@@ -337,10 +371,11 @@ def argparsing():
     argus.add_argument("-i", "--input-file", dest="inp", help="Input file path", required=True, type=str)
     argus.add_argument("-o", "--output-folder", dest="out", help="Output folder path", required=False, type=str,
                        default='../export')
+    argus.add_argument("-d", "--dataset", help="Existing dataset", required=False)
     return argus.parse_args()
 
 
 if __name__ == "__main__":
     args = argparsing()
-    bp = BookParser(input_file=args.inp, output_folder=args.out)
+    bp = BookParser(input_file=args.inp, output_folder=args.out, dataset=args.dataset)
     bp.run()
