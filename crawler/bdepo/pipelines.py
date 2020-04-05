@@ -83,6 +83,8 @@ class BdepoPipeline(object):
 class MongoPipeline(object):
 
     collection_name = 'dataset'
+    client = None
+    db = None
 
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
