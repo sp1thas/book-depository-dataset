@@ -7,6 +7,7 @@ verify_ssl = true
 flake8 = "*"
 pytest = "*"
 requests = "*"
+pytest-cov = "*"
 
 [packages]
 dateparser = "==0.7.2"
