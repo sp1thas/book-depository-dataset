@@ -15,5 +15,3 @@ class Cleaner:
     def __init__(self, input_folder, output_folder):
         self.input_folder = input_folder
         self.output_folder = output_folder
-
-    def clean
