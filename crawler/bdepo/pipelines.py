@@ -8,8 +8,9 @@ from scrapy.exceptions import DropItem
 from slugify import slugify
 from dateparser import parse
 import pymongo
-from pymongo.errors import DuplicateKeyError
+from scrapy.pipelines.images import ImagesPipeline
 import re
+import scrapy
 
 
 class BdepoPipeline(object):
@@ -116,3 +117,9 @@ class MongoPipeline(object):
             DropItem('Item Already Exists {}'.format(item['_id']))
         finally:
             return item
+
+
+class CoverImagePipeline(ImagesPipeline):
+    def get_media_requests(self, item, info):
+        if image_url := item.get('image_url'):
+            yield scrapy.Request(image_url)
