@@ -1,26 +1,19 @@
 # -*- coding: utf-8 -*-
 
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-from scrapy.exceptions import DropItem
-from slugify import slugify
-from dateparser import parse
-import pymongo
-from scrapy.pipelines.images import ImagesPipeline
+import os
 import re
-import scrapy
+
+import pymongo
+from dateparser import parse
+from scrapy.exceptions import DropItem
+from scrapy.pipelines.images import ImagesPipeline
 
 
 class BdepoPipeline(object):
-    """
-    Main pipeline class for book item parsing
+    """Main pipeline class for book item parsing
     """
     def process_item(self, item, spider):
         _id = item['_id']
-        for k in item.keys():
-            item[slugify(k.lower())] = item.pop(k)
 
         if not all((
             _id,
@@ -30,10 +23,7 @@ class BdepoPipeline(object):
         )):
             raise DropItem('Missing Values: {}'.format(item.get('url')))
 
-        item['_id'] = _id
-        keys = item.keys()
-
-        for k in keys:
+        for k in item.keys():
             if isinstance(item[k], str):
                 item[k] = item[k].strip()
                 if item[k].isdigit():
@@ -41,28 +31,25 @@ class BdepoPipeline(object):
             if not item[k]:
                 item[k] = None
 
-        if '_id' in keys:
-            item['_id'] = int(item['_id'])
+        item['_id'] = int(item['_id'])
 
-        if 'publication-date' in keys:
-            item['publication-date'] = parse(item['publication-date'])
-        if 'Publication date' in keys:
-            item['publication-date'] = parse(item.pop('Publication date'))
+        if item.get('publication_date') is not None:
+            item['publication_date'] = parse(item['publication_date'])
 
-        if 'bestsellers-rank' in keys and isinstance(item['bestsellers-rank'], str):
-            item['bestsellers-rank'] = int(item['bestsellers-rank'].replace(',', ''))
+        if item.get('bestsellers_rank') and isinstance(item['bestsellers_rank'], str):
+            item['bestsellers_rank'] = int(item['bestsellers_rank'].replace(',', ''))
         else:
-            item['bestsellers-rank'] = None
+            item['bestsellers_rank'] = None
 
-        if 'rating-count' in keys and isinstance(item['rating-count'], str):
-            r = item['rating-count'].replace(',', '')
+        if item.get('rating_count') and isinstance(item['rating_count'], str):
+            r = item['rating_count'].replace(',', '')
             r = re.findall(r'\d+', r)
             if r:
-                item['rating-count'] = int(r[0])
+                item['rating_count'] = int(r[0])
             else:
-                item['rating-count'] = None
+                item['rating_count'] = None
         else:
-            item['rating-count'] = None
+            item['rating_count'] = None
 
         if item.get('rating_avg'):
             try:
@@ -70,7 +57,7 @@ class BdepoPipeline(object):
             except ValueError:
                 pass
 
-        if item.get('price'):
+        if item.get('price') is not None:
             try:
                 item['price'] = float(item.replace(',', '.'))
             except Exception as e:
@@ -119,7 +106,29 @@ class MongoPipeline(object):
             return item
 
 
-class CoverImagePipeline(ImagesPipeline):
-    def get_media_requests(self, item, info):
-        if image_url := item.get('image_url'):
-            yield scrapy.Request(image_url)
+class FolderTreeImagePipeline(ImagesPipeline):
+    """Store Images using a folder tree structure. DEPTH attribute can be used to specify the depth of the tree.
+    """
+    DEPTH = 3
+
+    def tree_path(self, path: str) -> str:
+        """Generate a folder tree based on given path. I.e: path/to/image.jpg -> path/to/i/m/a/image.jpg
+
+        :param path: original image filepath.
+        :return: image filepath with extra folder tree.
+        """
+        filename = os.path.basename(path)
+        dirname = os.path.dirname(path)
+        return os.path.join(
+            dirname, *[_ for _ in filename[:self.DEPTH]], filename
+        )
+
+    def file_path(self, request, response=None, info=None):
+        return self.tree_path(
+            super().file_path(request, response, info)
+        )
+
+    def thumb_path(self, request, thumb_id, response=None, info=None):
+        return self.tree_path(
+            super().thumb_path(request, thumb_id, response=response, info=info)
+        )

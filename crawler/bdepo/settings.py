@@ -66,9 +66,8 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+    'bdepo.pipelines.FolderStructureImagePipeline': 200,
     'bdepo.pipelines.BdepoPipeline': 100,
-    'bdepo.pipelines.MongoPipeline': 300,
-
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -106,3 +105,5 @@ if os.path.exists('bdepo/creds.json'):
         creds = json.load(f)
         MONGO_URI = creds['MONGO_URI']
         MONGO_DATABASE = creds['MONGO_DATABASE']
+
+IMAGES_STORE = os.getcwd()
