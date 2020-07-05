@@ -2,12 +2,14 @@
 import datetime
 import logging
 import re
+from random import shuffle
+
+import pymongo
 import scrapy
 from scrapy.utils.project import get_project_settings
-import pymongo
-from bson import ObjectId
-from random import shuffle
-import logging
+from slugify import slugify
+
+from ..items import BookItem
 
 settings = get_project_settings()
 
@@ -17,7 +19,7 @@ class BdepobooksSpider(scrapy.Spider):
     allowed_domains = ['bookdepository.com']
 
     client = None
-    if settings['MONGO_URI']:
+    if settings.get('MONGO_URI'):
         client = pymongo.MongoClient(settings['MONGO_URI'])
         db = client[settings['MONGO_DATABASE']]
         col = db['dataset']
@@ -59,7 +61,7 @@ class BdepobooksSpider(scrapy.Spider):
         'https://www.bookdepository.com/category/3391/Teen-Young-Adult',
         'https://www.bookdepository.com/category/2967/Transport',
         'https://www.bookdepository.com/category/3098/Travel-Holiday-Guides'
-    ]
+    ][:2]
     shuffle(start_urls)
 
     def parse(self, response):
@@ -77,18 +79,18 @@ class BdepobooksSpider(scrapy.Spider):
             else:
                 logging.error('could not extract book id from url: {}'.format(book_url))
                 continue
-            try:
-                d = self.col.find_one({"_id": int(book_id)})
-            except Exception as e:
-                print('error {}'.format(book_id))
-                d = False
-            if d is False:
-                continue
-            elif d:
-                logging.debug('{} already harvested {}'.format(book_id, book_url))
-                continue
-            else:
-                yield scrapy.Request(url=book_url, callback=self.parse_book)
+            # try:
+            #     d = self.col.find_one({"_id": int(book_id)})
+            # except Exception as e:
+            #     print('error {}'.format(book_id))
+            #     d = False
+            # if d is False:
+            #     continue
+            # elif d:
+            #     logging.debug('{} already harvested {}'.format(book_id, book_url))
+            #     continue
+            # else:
+            yield scrapy.Request(url=book_url, callback=self.parse_book)
 
         next_href = response.xpath('//li[@id="next-top"]/a/@href').extract_first()
         if next_href:
@@ -124,8 +126,10 @@ class BdepobooksSpider(scrapy.Spider):
         return categories
 
     def parse_book(self, response):
-        description = response.xpath('//div[@class="item-description"]/div/text()').extract_first()
-        title = response.xpath('//h1/text()').extract_first()
+        book = BookItem()
+        book['description'] = response.xpath('//div[@class="item-description"]/div/text()').extract_first()
+        book['title'] = response.xpath('//h1/text()').extract_first()
+        book['image_urls'] = [response.xpath('//div[@class="item-img-content"]/img/@src').extract_first()]
         rating_avg = response.xpath('//span[@itemprop="ratingValue"]/text()').extract_first()
         price = response.xpath('//span[@class="sale-price"]/text()').extract_first()
         if price:
@@ -143,27 +147,30 @@ class BdepobooksSpider(scrapy.Spider):
                 rating_avg = None
         else:
             rating_avg = None
-        rating_count = response.xpath('//span[@class="rating-count"]/text()').extract_first()
+
+        book['rating_avg'] = rating_avg
+
+        book.update({
+            'price': price,
+            'rating_avg': rating_avg,
+            'rating_count': response.xpath('//span[@class="rating-count"]/text()').extract_first(),
+            'indexed_date': datetime.datetime.now(),
+            'url': response.url,
+            'categories': self.extract_categories(response),
+            'authors': self.extract_authors(response),
+        })
 
         f = re.findall(r'bookdepository.com/[\w\-_]+/(\d+)', response.url)
         if f:
             _id = f[0]
-
-            data = {
-                'description': description,
-                'title': title,
-                'rating_avg': rating_avg,
-                '_id': _id,
-                'url': response.url,
-                'categories': self.extract_categories(response),
-                'authors': self.extract_authors(response),
-                'indexed-date': datetime.datetime.now(),
-                'rating-count': rating_count,
-                'price': price
-            }
+            book['_id'] = _id
 
             for item in response.xpath('//ul[@class="biblio-info"]/li'):
                 label = item.xpath('./label/text()').extract_first()
+                if label is not None:
+                    label = slugify(label.lower().strip()).replace('-', '_')
+                else:
+                    continue
                 value = item.xpath('./span/text()').extract_first()
-                data[label] = value
-            yield data
+                book.update({label: value})
+            yield book
