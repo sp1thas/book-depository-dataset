@@ -23,7 +23,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip pipenv
-        pipenv install --deploy --system --dev
+        pipenv install --dev --system --deploy --clear
+        pip uninstall pipenv -y --no-cache-dir
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
