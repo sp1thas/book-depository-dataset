@@ -61,7 +61,7 @@ class BdepobooksSpider(scrapy.Spider):
         'https://www.bookdepository.com/category/3391/Teen-Young-Adult',
         'https://www.bookdepository.com/category/2967/Transport',
         'https://www.bookdepository.com/category/3098/Travel-Holiday-Guides'
-    ][:2]
+    ]
     shuffle(start_urls)
 
     def parse(self, response):
