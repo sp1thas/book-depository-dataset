@@ -106,7 +106,7 @@ class MongoPipeline(object):
             return item
 
 
-class FolderTreeImagePipeline(ImagesPipeline):
+class FolderStructureImagePipeline(ImagesPipeline):
     """Store Images using a folder tree structure. DEPTH attribute can be used to specify the depth of the tree.
     """
     DEPTH = 3
