@@ -11,10 +11,10 @@ import json
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'bdepo'
+BOT_NAME = "bdepo"
 
-SPIDER_MODULES = ['bdepo.spiders']
-NEWSPIDER_MODULE = 'bdepo.spiders'
+SPIDER_MODULES = ["bdepo.spiders"]
+NEWSPIDER_MODULE = "bdepo.spiders"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'bdepo (+http://www.yourdomain.com)'
@@ -66,8 +66,8 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'bdepo.pipelines.FolderStructureImagePipeline': 200,
-    'bdepo.pipelines.BdepoPipeline': 100,
+    "bdepo.pipelines.FolderStructureImagePipeline": 200,
+    "bdepo.pipelines.BdepoPipeline": 100,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -100,10 +100,10 @@ LOG_LEVEL = "INFO"
 MONGO_URI = None
 MONGO_DATABASE = None
 
-if os.path.exists('bdepo/creds.json'):
-    with open('bdepo/creds.json') as f:
+if os.path.exists("bdepo/creds.json"):
+    with open("bdepo/creds.json") as f:
         creds = json.load(f)
-        MONGO_URI = creds['MONGO_URI']
-        MONGO_DATABASE = creds['MONGO_DATABASE']
+        MONGO_URI = creds["MONGO_URI"]
+        MONGO_DATABASE = creds["MONGO_DATABASE"]
 
 IMAGES_STORE = os.getcwd()

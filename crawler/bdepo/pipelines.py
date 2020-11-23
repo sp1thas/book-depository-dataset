@@ -12,16 +12,19 @@ from scrapy.pipelines.images import ImagesPipeline
 class BdepoPipeline(object):
     """Main pipeline class for book item parsing
     """
-    def process_item(self, item, spider):
-        _id = item['_id']
 
-        if not all((
-            _id,
-            item.get('title'),
-            # item.get('description'),
-            item.get('url'),
-        )):
-            raise DropItem('Missing Values: {}'.format(item.get('url')))
+    def process_item(self, item, spider):
+        _id = item["_id"]
+
+        if not all(
+            (
+                _id,
+                item.get("title"),
+                # item.get('description'),
+                item.get("url"),
+            )
+        ):
+            raise DropItem("Missing Values: {}".format(item.get("url")))
 
         for k in item.keys():
             if isinstance(item[k], str):
@@ -31,46 +34,46 @@ class BdepoPipeline(object):
             if not item[k]:
                 item[k] = None
 
-        item['_id'] = int(item['_id'])
+        item["_id"] = int(item["_id"])
 
-        if item.get('publication_date') is not None:
-            item['publication_date'] = parse(item['publication_date'])
+        if item.get("publication_date") is not None:
+            item["publication_date"] = parse(item["publication_date"])
 
-        if item.get('bestsellers_rank') and isinstance(item['bestsellers_rank'], str):
-            item['bestsellers_rank'] = int(item['bestsellers_rank'].replace(',', ''))
+        if item.get("bestsellers_rank") and isinstance(item["bestsellers_rank"], str):
+            item["bestsellers_rank"] = int(item["bestsellers_rank"].replace(",", ""))
         else:
-            item['bestsellers_rank'] = None
+            item["bestsellers_rank"] = None
 
-        if item.get('rating_count') and isinstance(item['rating_count'], str):
-            r = item['rating_count'].replace(',', '')
-            r = re.findall(r'\d+', r)
+        if item.get("rating_count") and isinstance(item["rating_count"], str):
+            r = item["rating_count"].replace(",", "")
+            r = re.findall(r"\d+", r)
             if r:
-                item['rating_count'] = int(r[0])
+                item["rating_count"] = int(r[0])
             else:
-                item['rating_count'] = None
+                item["rating_count"] = None
         else:
-            item['rating_count'] = None
+            item["rating_count"] = None
 
-        if item.get('rating_avg'):
+        if item.get("rating_avg"):
             try:
-                item['rating_avg'] = float(item['rating_avg'])
+                item["rating_avg"] = float(item["rating_avg"])
             except ValueError:
                 pass
 
-        if item.get('price') is not None:
+        if item.get("price") is not None:
             try:
-                item['price'] = float(item.replace(',', '.'))
+                item["price"] = float(item.replace(",", "."))
             except Exception as e:
-                item['price'] = None
+                item["price"] = None
         else:
-            item['price'] = None
+            item["price"] = None
 
         return item
 
 
 class MongoPipeline(object):
 
-    collection_name = 'dataset'
+    collection_name = "dataset"
     client = None
     db = None
 
@@ -81,8 +84,8 @@ class MongoPipeline(object):
     @classmethod
     def from_crawler(cls, crawler):
         return cls(
-            mongo_uri=crawler.settings.get('MONGO_URI'),
-            mongo_db=crawler.settings.get('MONGO_DATABASE', 'items')
+            mongo_uri=crawler.settings.get("MONGO_URI"),
+            mongo_db=crawler.settings.get("MONGO_DATABASE", "items"),
         )
 
     def open_spider(self, spider):
@@ -96,12 +99,9 @@ class MongoPipeline(object):
         # if not item:
         #     DropItem('Empty item: {}'.format(item))
         try:
-            self.db['dataset'].insert_one({
-                '_id': int(item['_id']),
-                'ok': True
-            })
+            self.db["dataset"].insert_one({"_id": int(item["_id"]), "ok": True})
         except:
-            DropItem('Item Already Exists {}'.format(item['_id']))
+            DropItem("Item Already Exists {}".format(item["_id"]))
         finally:
             return item
 
@@ -109,6 +109,7 @@ class MongoPipeline(object):
 class FolderStructureImagePipeline(ImagesPipeline):
     """Store Images using a folder tree structure. DEPTH attribute can be used to specify the depth of the tree.
     """
+
     DEPTH = 3
 
     def tree_path(self, path: str) -> str:
@@ -119,14 +120,10 @@ class FolderStructureImagePipeline(ImagesPipeline):
         """
         filename = os.path.basename(path)
         dirname = os.path.dirname(path)
-        return os.path.join(
-            dirname, *[_ for _ in filename[:self.DEPTH]], filename
-        )
+        return os.path.join(dirname, *[_ for _ in filename[: self.DEPTH]], filename)
 
     def file_path(self, request, response=None, info=None):
-        return self.tree_path(
-            super().file_path(request, response, info)
-        )
+        return self.tree_path(super().file_path(request, response, info))
 
     def thumb_path(self, request, thumb_id, response=None, info=None):
         return self.tree_path(

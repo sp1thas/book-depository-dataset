@@ -4,12 +4,14 @@ import datetime
 import json
 import os
 import re
-from typing import Dict, List, Union, Any, Tuple
-import jsonlines
-from utils import keep_cols, kaggle_description
-from tqdm import tqdm
-import langcodes
 import shutil
+from typing import Dict, List, Union, Any, Tuple
+from zipfile import ZipFile
+
+import jsonlines
+import langcodes
+from tqdm import tqdm
+from utils import keep_cols, kaggle_description
 
 
 class BookParser:
@@ -32,13 +34,14 @@ class BookParser:
 
 
     """
+
     re_dim_x = re.compile(r"[\d.,]+")
     re_dim_y = re.compile(r"x\s+([\d.,]+)\s+")
     re_dim_z = re.compile(r"([\d.,]+)mm")
     re_w = re.compile(r"([\d.,]+)g")
-    re_format = re.compile(r'\w+')
-    re_id = re.compile(r'/(\d+)/')
-    re_url = re.compile(r'bookdepository.com([\w\-_\d\/]+)[\?^]?')
+    re_format = re.compile(r"\w+")
+    re_id = re.compile(r"/(\d+)/")
+    re_url = re.compile(r"bookdepository.com([\w\-_\d\/]+)[\?^]?")
 
     id2author = {}
     author2id = {}
@@ -50,7 +53,6 @@ class BookParser:
     city_country2id = {}
     city_i = 0
     missing_languages = set()
-
 
     new_ugc = 0
     new_places = 0
@@ -69,8 +71,15 @@ class BookParser:
     c = 0
     n_rows = 0
 
-    def __init__(self, input_file: str, output_folder: str, dataset: str) -> None:
+    def __init__(
+        self,
+        input_file: str,
+        output_folder: str,
+        dataset: str,
+        image_folder: str = None,
+    ) -> None:
         self.input_file = input_file
+        self.image_folder = image_folder
         self.output_folder = output_folder
         self.dataset_path = dataset
         self.harvested = set()
@@ -78,109 +87,173 @@ class BookParser:
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
         if self.dataset_path and os.path.exists(self.dataset_path):
-            with open(os.path.join(self.dataset_path, 'dataset.csv'), 'r') as f:
+            with open(os.path.join(self.dataset_path, "dataset.csv"), "r") as f:
                 rd = csv.reader(f)
                 for header in rd:
                     break
                 self.col_to_index = {_: i for i, _ in enumerate(header)}
                 for row in rd:
-                    self.harvested.add(
-                        int(row[self.col_to_index['id']])
-                    )
+                    self.harvested.add(int(row[self.col_to_index["id"]]))
                     self.total_ugc += 1
 
-            print('Harvested id successfully loaded')
-            for filename in ('dataset.csv', 'authors.csv', 'categories.csv', 'places.csv', 'formats.csv'):
-                shutil.copy(os.path.join(self.dataset_path, filename), os.path.join(self.output_folder, filename))
-                print('Successfully copied: {} --> {}'.format(
-                    self.dataset_path, os.path.join(self.output_folder, filename))
+            print("Harvested id successfully loaded")
+            for filename in (
+                "dataset.csv",
+                "authors.csv",
+                "categories.csv",
+                "places.csv",
+                "formats.csv",
+            ):
+                shutil.copy(
+                    os.path.join(self.dataset_path, filename),
+                    os.path.join(self.output_folder, filename),
                 )
-            with open(os.path.join(self.output_folder, 'authors.csv'), 'r') as f:
+                print(
+                    "Successfully copied: {} --> {}".format(
+                        self.dataset_path, os.path.join(self.output_folder, filename)
+                    )
+                )
+            with open(os.path.join(self.output_folder, "authors.csv"), "r") as f:
                 rd = csv.reader(f)
                 for h in rd:
                     name_2_index = {_: i for i, _ in enumerate(h)}
                 for row in rd:
-                    if row[name_2_index['author_name']]:
-                        self.author2id[row[name_2_index['author_name']]] = int(row[name_2_index['author_id']])
-            with open(os.path.join(self.output_folder, 'categories.csv'), 'r') as f:
+                    if row[name_2_index["author_name"]]:
+                        self.author2id[row[name_2_index["author_name"]]] = int(
+                            row[name_2_index["author_id"]]
+                        )
+            with open(os.path.join(self.output_folder, "categories.csv"), "r") as f:
                 rd = csv.reader(f)
                 for h in rd:
                     name_2_index = {_: i for i, _ in enumerate(h)}
                 for row in rd:
-                    if row[name_2_index['category_name']]:
-                        self.categories[row[name_2_index['category_id']]] = row[name_2_index['category_name']]
+                    if row[name_2_index["category_name"]]:
+                        self.categories[row[name_2_index["category_id"]]] = row[
+                            name_2_index["category_name"]
+                        ]
 
-            with open(os.path.join(self.output_folder, 'places.csv'), 'r') as f:
+            with open(os.path.join(self.output_folder, "places.csv"), "r") as f:
                 rd = csv.reader(f)
                 for h in rd:
                     name_2_index = {_: i for i, _ in enumerate(h)}
                 for row in rd:
-                    if row[name_2_index['place_name']]:
-                        self.city_country2id[row[name_2_index['place_name']]] = int(row[name_2_index['place_id']])
+                    if row[name_2_index["place_name"]]:
+                        self.city_country2id[row[name_2_index["place_name"]]] = int(
+                            row[name_2_index["place_id"]]
+                        )
 
-            with open(os.path.join(self.output_folder, 'formats.csv'), 'r') as f:
+            with open(os.path.join(self.output_folder, "formats.csv"), "r") as f:
                 rd = csv.reader(f)
                 for h in rd:
                     name_2_index = {_: i for i, _ in enumerate(h)}
                 for row in rd:
-                    if row[name_2_index['format_name']]:
-                        self.id2format[int(row[name_2_index['format_id']])] = row[name_2_index['format_name']]
+                    if row[name_2_index["format_name"]]:
+                        self.id2format[int(row[name_2_index["format_id"]])] = row[
+                            name_2_index["format_name"]
+                        ]
 
-            self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'a')
+            self.f = open(os.path.join(self.output_folder, "dataset.csv"), "a")
             self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
         else:
-            self.f = open(os.path.join(self.output_folder, 'dataset.csv'), 'w')
+            self.f = open(os.path.join(self.output_folder, "dataset.csv"), "w")
             self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
             self.wr.writerow([_ for _ in keep_cols])
 
     def run(self):
-        with open(self.input_file, 'r') as rd:
+        with open(self.input_file, "r") as rd:
             for row in rd:
-                self.n_rows +=1
+                self.n_rows += 1
 
         with jsonlines.open(self.input_file) as rd:
             for row in tqdm(rd, total=self.n_rows):
                 parsed = self.parse_entry(row)
-                if not all((
-                    parsed.get('id'), parsed.get('isbn10')
-                )):
+                if not all((parsed.get("id"), parsed.get("isbn10"))):
                     continue
-                if parsed['id'] in self.dupl:
+                if parsed["id"] in self.dupl:
                     continue
                 else:
-                    self.dupl.add(parsed['id'])
+                    self.dupl.add(parsed["id"])
 
                 self.write_entry(parsed)
-        with open(os.path.join(self.output_folder, 'authors.csv'), 'w') as f:
+        with open(os.path.join(self.output_folder, "authors.csv"), "w") as f:
             wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(['author_id', 'author_name'])
+            wr.writerow(["author_id", "author_name"])
             for k, v in sorted(self.author2id.items(), key=lambda item: item[0]):
                 wr.writerow([v, k])
-        with open(os.path.join(self.output_folder, 'categories.csv'), 'w') as f:
+        with open(os.path.join(self.output_folder, "categories.csv"), "w") as f:
             wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(['category_id', 'category_name'])
+            wr.writerow(["category_id", "category_name"])
             for k, v in sorted(self.categories.items(), key=lambda item: item[1]):
                 wr.writerow([k, v])
-        with open(os.path.join(self.output_folder, 'formats.csv'), 'w') as f:
+        with open(os.path.join(self.output_folder, "formats.csv"), "w") as f:
             wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(['format_id', 'format_name'])
+            wr.writerow(["format_id", "format_name"])
             for k, v in sorted(self.id2format.items(), key=lambda item: item[1]):
                 wr.writerow([k, v])
-        with open(os.path.join(self.output_folder, 'places.csv'), 'w') as f:
+        with open(os.path.join(self.output_folder, "places.csv"), "w") as f:
             wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(['place_id', 'place_name'])
+            wr.writerow(["place_id", "place_name"])
             for k, v in sorted(self.city_country2id.items(), key=lambda item: item[0]):
                 wr.writerow([v, k])
 
-        with open(os.path.join(self.output_folder, 'KAGGLE_README.md'), 'w') as f:
+        with open(os.path.join(self.output_folder, "KAGGLE_README.md"), "w") as f:
             f.write(kaggle_description)
 
         print(self.cols - set(keep_cols.keys()))
-        print('''
+        print(
+            """
           New UGC: {}
         Total UGC: {}
-        '''.format(self.new_ugc, self.total_ugc))
+        """.format(
+                self.new_ugc, self.total_ugc
+            )
+        )
         self.close()
+
+    @staticmethod
+    def _split_all(path):
+        allparts = []
+        while 1:
+            parts = os.path.split(path)
+            if parts[0] == path:  # sentinel for absolute paths
+                allparts.insert(0, parts[0])
+                break
+            elif parts[1] == path:  # sentinel for relative paths
+                allparts.insert(0, parts[1])
+                break
+            else:
+                path = parts[0]
+                allparts.insert(0, parts[1])
+        return allparts
+
+    @staticmethod
+    def _extract_zip_path(full_path):
+        zip_path = []
+        flag = False
+
+        for _ in BookParser._split_all(full_path):
+            if _ == "full":
+                flag = True
+
+            if flag:
+                zip_path.append(_)
+        return os.path.join(*zip_path)
+
+    def zip(self):
+        with ZipFile(os.path.join(self.output_folder, "bdd.zip"), "w") as zf:
+            for filename in (
+                "authors.csv",
+                "categories.csv",
+                "formats.csv",
+                "places.csv",
+                "dataset.csv",
+            ):
+                zf.write(os.path.join(self.output_folder, filename), arcname=filename)
+            if self.image_folder:
+                for path, dirs, filenames in os.walk(self.image_folder):
+                    for filename in filenames:
+                        zip_path = self._extract_zip_path(os.path.join(path, filename))
+                        zf.write(os.path.join(path, filename), arcname=zip_path)
 
     def close(self):
         """
@@ -195,12 +268,14 @@ class BookParser:
 
     def write_entry(self, entry: Dict[str, Any]):
         row = []
-        if isinstance(entry.get('dimensions'), str):
-            entry['dimensions'], entry['weight'] = self.extract_dimensions(entry['dimensions'])
-        for k, v in entry.pop('dimensions', {}).items():
-            entry['dimension_{}'.format(k)] = v
+        if isinstance(entry.get("dimensions"), str):
+            entry["dimensions"], entry["weight"] = self.extract_dimensions(
+                entry["dimensions"]
+            )
+        for k, v in entry.pop("dimensions", {}).items():
+            entry["dimension_{}".format(k)] = v
 
-        if int(entry['id']) in self.harvested:
+        if int(entry["id"]) in self.harvested:
             return
         for k in keep_cols:
             v = entry.get(k)
@@ -222,7 +297,9 @@ class BookParser:
             self.city_country2id[place] = self.city_i
             return self.city_country2id[place]
 
-    def extract_dimensions(self, dims: str) -> Tuple[Dict[str, Union[float, None]], Union[float, None]]:
+    def extract_dimensions(
+        self, dims: str
+    ) -> Tuple[Dict[str, Union[float, None]], Union[float, None]]:
         """
         Extract dimensions from raw text
         :param dims: raw text with dimensions and weight
@@ -238,20 +315,20 @@ class BookParser:
         if not dims:
             return x, y, z, w
         try:
-            x = float(re.findall(self.re_dim_x, dims)[0].replace(',', ''))
+            x = float(re.findall(self.re_dim_x, dims)[0].replace(",", ""))
         except Exception as e:
-            print('{}\n{}\n{}'.format(e, 'x not found', dims))
+            print("{}\n{}\n{}".format(e, "x not found", dims))
         try:
-            y = float(re.findall(self.re_dim_y, dims)[0].replace(',', ''))
+            y = float(re.findall(self.re_dim_y, dims)[0].replace(",", ""))
         except Exception as e:
             pass
             # print('{}\n{}\n{}'.format(e, 'y not found', dims))
         try:
-            z = float(re.findall(self.re_dim_z, dims)[0].replace(',', ''))
+            z = float(re.findall(self.re_dim_z, dims)[0].replace(",", ""))
         except Exception as e:
-            print('{}\n{}\n{}'.format(e, 'z not found', dims))
+            print("{}\n{}\n{}".format(e, "z not found", dims))
         try:
-            w = float(re.findall(self.re_w, dims)[0].replace(',', ''))
+            w = float(re.findall(self.re_w, dims)[0].replace(",", ""))
         except Exception as e:
             pass
         return x, y, z, w
@@ -295,7 +372,7 @@ class BookParser:
                     pass
                 else:
                     self.missing_languages.add(lng)
-                    print('unknown language: {}'.format(lng))
+                    print("unknown language: {}".format(lng))
                 return None
 
     def extract_id(self, url: str) -> Union[None, str]:
@@ -321,48 +398,58 @@ class BookParser:
         :return: book entry in proper format
         :rtype: dict
         """
-        if entry.get('_id'):
-            entry['id'] = entry.pop('_id')
-        if entry.get('indexed-date'):
-            entry['index-date'] = entry.pop('indexed-date')
-        if not entry['id']:
-            entry['id'] = self.extract_id(entry['url'])
-        if entry.get('rating-avg', None) is None:
-            entry['rating-avg'] = None
+        if entry.get("_id"):
+            entry["id"] = entry.pop("_id")
+        if entry.get("indexed-date"):
+            entry["index-date"] = entry.pop("indexed-date")
+        if not entry["id"]:
+            entry["id"] = self.extract_id(entry["url"])
+        if entry.get("rating-avg", None) is None:
+            entry["rating-avg"] = None
         else:
-            entry['rating-avg'] = float(entry['rating-avg'])
-        if entry.get('rating-count') is None:
+            entry["rating-avg"] = float(entry["rating-avg"])
+        if entry.get("rating-count") is None:
             pass
         else:
-            entry['rating-count'] = int(entry['rating-count'])
-        if entry.get('bestsellers-rank') is None:
+            entry["rating-count"] = int(entry["rating-count"])
+        if entry.get("bestsellers-rank") is None:
             pass
         else:
-            entry['bestsellers-rank'] = int(entry['bestsellers-rank'])
+            entry["bestsellers-rank"] = int(entry["bestsellers-rank"])
 
-        if entry.get('url'):
-            entry['url'] = self.extract_relative_url(entry.pop('url'))
+        if entry.get("url"):
+            entry["url"] = self.extract_relative_url(entry.pop("url"))
 
-        if entry.get('publication-city-country'):
-            entry['publication-place'] = self.extract_publish_place(entry.pop('publication-city-country'))
+        if entry.get("publication-city-country"):
+            entry["publication-place"] = self.extract_publish_place(
+                entry.pop("publication-city-country")
+            )
+
+        if entry.get("images"):
+            img_obj = entry["images"]
+            if isinstance(img_obj, list) and len(img_obj) > 0:
+                entry["image-url"] = img_obj[0].get("url")
+                entry["image-path"] = img_obj[0].get("path")
+                entry["image-checksum"] = img_obj[0].get("checksum")
+
             # break
         categories__ = []
 
-        categories_labels = entry.pop('categories', [])
+        categories_labels = entry.pop("categories", [])
         if categories_labels:
             for category in categories_labels:
-                if category['id'] in self.categories:
+                if category["id"] in self.categories:
                     pass
                 else:
-                    self.categories[category['id']] = category['name']
-                if category['id'] not in categories__:
-                    categories__.append(category['id'])
+                    self.categories[category["id"]] = category["name"]
+                if category["id"] not in categories__:
+                    categories__.append(category["id"])
         else:
             pass
 
         authors__ = []
 
-        authors_labels = entry.pop('authors', [])
+        authors_labels = entry.pop("authors", [])
 
         if authors_labels:
             for author in authors_labels:
@@ -378,30 +465,43 @@ class BookParser:
         else:
             pass
 
-        if 'ISBN10' in entry:
-            entry['isbn10'] = entry.pop('ISBN10')
-        if 'ISBN13' in entry:
-            entry['isbn10'] = entry.pop('ISBN13')
+        if "ISBN10" in entry:
+            entry["isbn10"] = entry.pop("ISBN10")
+        if "ISBN13" in entry:
+            entry["isbn10"] = entry.pop("ISBN13")
 
-        entry['dimension-x'], entry['dimension-y'], entry['dimension-z'], entry['weight'] = self.extract_dimensions(entry.pop('dimensions', ''))
+        (
+            entry["dimension-x"],
+            entry["dimension-y"],
+            entry["dimension-z"],
+            entry["weight"],
+        ) = self.extract_dimensions(entry.pop("dimensions", ""))
 
         try:
-            entry['publication-date'] = datetime.datetime.strptime(
-                entry['publication-date'], '%Y-%m-%d %H:%M:%S'
-            ).strftime('%Y-%m-%d') if entry.get('publication-date') else None
+            entry["publication-date"] = (
+                datetime.datetime.strptime(
+                    entry["publication-date"], "%Y-%m-%d %H:%M:%S"
+                ).strftime("%Y-%m-%d")
+                if entry.get("publication-date")
+                else None
+            )
         except:
-            entry['publication-date'] = None
+            entry["publication-date"] = None
 
-        entry.update({
-            'categories': categories__,
-            'authors': authors__,
-            'format': self.extract_format(entry.pop('format', '')),
-            'lang': self.extract_lang(entry.pop('language', '')),
-        })
+        entry.update(
+            {
+                "categories": categories__,
+                "authors": authors__,
+                "format": self.extract_format(entry.pop("format", "")),
+                "lang": self.extract_lang(entry.pop("language", "")),
+            }
+        )
 
         c = tuple(entry.keys())
         for k in c:
-            entry[k.lower().replace(' ', '-').replace('/', '-').replace('_', '-')] = entry.pop(k)
+            entry[
+                k.lower().replace(" ", "-").replace("/", "-").replace("_", "-")
+            ] = entry.pop(k)
 
         for k in entry.keys():
             self.cols.add(k)
@@ -412,14 +512,40 @@ class BookParser:
 
 def argparsing():
     argus = argparse.ArgumentParser()
-    argus.add_argument("-i", "--input-file", dest="inp", help="Input file path", required=True, type=str)
-    argus.add_argument("-o", "--output-folder", dest="out", help="Output folder path", required=False, type=str,
-                       default='../export')
+    argus.add_argument(
+        "--input-jsonb",
+        dest="input_jsonb",
+        help="Input file of jsonb",
+        required=True,
+        type=str,
+    )
+    argus.add_argument(
+        "--input-images",
+        dest="input_images",
+        help="Input folder with images",
+        required=False,
+        type=str,
+    )
+    argus.add_argument(
+        "-o",
+        "--output-folder",
+        dest="out",
+        help="Output folder path",
+        required=False,
+        type=str,
+        default="../export",
+    )
     argus.add_argument("-d", "--dataset", help="Existing dataset", required=False)
     return argus.parse_args()
 
 
 if __name__ == "__main__":
     args = argparsing()
-    bp = BookParser(input_file=args.inp, output_folder=args.out, dataset=args.dataset)
+    bp = BookParser(
+        input_file=args.input_jsonb,
+        output_folder=args.out,
+        dataset=args.dataset,
+        image_folder=args.input_images,
+    )
     bp.run()
+    bp.zip()
