@@ -4,7 +4,7 @@ import os
 import re
 
 import pymongo  # type: ignore
-from dateparser import parse
+from dateparser import parse  # type: ignore
 from scrapy.exceptions import DropItem  # type: ignore
 from scrapy.pipelines.images import ImagesPipeline  # type: ignore
 

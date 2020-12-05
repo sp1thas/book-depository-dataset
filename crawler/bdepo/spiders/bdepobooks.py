@@ -7,7 +7,7 @@ from random import shuffle
 import pymongo  # type: ignore
 import scrapy  # type: ignore
 from scrapy.utils.project import get_project_settings  # type: ignore
-from slugify import slugify
+from slugify import slugify  # type: ignore
 
 from ..items import BookItem
 
