@@ -4,11 +4,10 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-flake8 = "*"
 pytest = "*"
 requests = "*"
-pytest-cov = "*"
 black = "*"
+mypy = "*"
 
 [packages]
 dateparser = "==0.7.2"

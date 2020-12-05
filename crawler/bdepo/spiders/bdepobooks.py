@@ -4,9 +4,9 @@ import logging
 import re
 from random import shuffle
 
-import pymongo
-import scrapy
-from scrapy.utils.project import get_project_settings
+import pymongo  # type: ignore
+import scrapy  # type: ignore
+from scrapy.utils.project import get_project_settings  # type: ignore
 from slugify import slugify
 
 from ..items import BookItem
@@ -146,8 +146,9 @@ class BdepobooksSpider(scrapy.Spider):
         price = response.xpath('//span[@class="sale-price"]/text()').extract_first()
         if price:
             try:
-                price = float(re.findall(r"\d+,\d+", price)[0])
+                price = float(re.findall(r"\d+\.\d+", price.replace(",", "."))[0])
             except Exception as e:
+                print(e)
                 price = None
         else:
             price = None

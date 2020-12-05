@@ -5,13 +5,14 @@ import json
 import os
 import re
 import shutil
-from typing import Dict, List, Union, Any, Tuple
+from typing import Dict, List, Union, Any, Tuple, Optional
 from zipfile import ZipFile
 
-import jsonlines
-import langcodes
-from tqdm import tqdm
-from utils import keep_cols, kaggle_description
+import jsonlines  # type: ignore
+import langcodes  # type: ignore
+from tqdm import tqdm  # type: ignore
+
+from utils import keep_cols, kaggle_description  # type: ignore
 
 
 class BookParser:
@@ -43,33 +44,33 @@ class BookParser:
     re_id = re.compile(r"/(\d+)/")
     re_url = re.compile(r"bookdepository.com([\w\-_\d\/]+)[\?^]?")
 
-    id2author = {}
-    author2id = {}
-    author_id = 0
-    format2id = {}
-    id2format = {}
-    categories = {}
-    format_id = 0
-    city_country2id = {}
-    city_i = 0
-    missing_languages = set()
+    id2author: dict = {}
+    author2id: dict = {}
+    author_id: int = 0
+    format2id: dict = {}
+    id2format: dict = {}
+    categories: dict = {}
+    format_id: int = 0
+    city_country2id: dict = {}
+    city_i: int = 0
+    missing_languages: set = set()
 
-    new_ugc = 0
-    new_places = 0
-    new_authors = 0
-    new_categories = 0
-    new_formats = 0
+    new_ugc: int = 0
+    new_places: int = 0
+    new_authors: int = 0
+    new_categories: int = 0
+    new_formats: int = 0
 
-    total_ugc = 0
-    total_places = 0
-    total_authors = 0
-    total_categories = 0
-    total_formats = 0
+    total_ugc: int = 0
+    total_places: int = 0
+    total_authors: int = 0
+    total_categories: int = 0
+    total_formats: int = 0
 
-    dupl = set()
-    cols = set()
-    c = 0
-    n_rows = 0
+    dupl: set = set()
+    cols: set = set()
+    c: int = 0
+    n_rows: int = 0
 
     def __init__(
         self,
@@ -269,9 +270,8 @@ class BookParser:
     def write_entry(self, entry: Dict[str, Any]):
         row = []
         if isinstance(entry.get("dimensions"), str):
-            entry["dimensions"], entry["weight"] = self.extract_dimensions(
-                entry["dimensions"]
-            )
+            _ = self.extract_dimensions(entry["dimensions"])
+            entry["dimensions"], entry["weight"] = _[:4], _[4]
         for k, v in entry.pop("dimensions", {}).items():
             entry["dimension_{}".format(k)] = v
 
@@ -299,7 +299,7 @@ class BookParser:
 
     def extract_dimensions(
         self, dims: str
-    ) -> Tuple[Dict[str, Union[float, None]], Union[float, None]]:
+    ) -> Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]:
         """
         Extract dimensions from raw text
         :param dims: raw text with dimensions and weight
@@ -354,7 +354,7 @@ class BookParser:
             self.id2format[self.format_id] = frmt
         return self.format2id[frmt]
 
-    def extract_lang(self, lang: str) -> List[str]:
+    def extract_lang(self, lang: str) -> Optional[List[str]]:
         """
         Extract language code from raw text
         :param lang: language raw text
@@ -373,21 +373,21 @@ class BookParser:
                 else:
                     self.missing_languages.add(lng)
                     print("unknown language: {}".format(lng))
-                return None
+        return None
 
-    def extract_id(self, url: str) -> Union[None, str]:
+    def extract_id(self, url: str) -> Optional[str]:
         """
         Extract book id from given url
 
         :param url: book url
-        :tyoe url: str
         :return: book id
         :rtype: str
         """
         try:
             return re.findall(self.re_id, url)[0]
-        except Exception as e:
+        except IndexError as _:
             print(url)
+        return None
 
     def parse_entry(self, entry):
         """

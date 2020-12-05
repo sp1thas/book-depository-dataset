@@ -3,10 +3,10 @@
 import os
 import re
 
-import pymongo
+import pymongo  # type: ignore
 from dateparser import parse
-from scrapy.exceptions import DropItem
-from scrapy.pipelines.images import ImagesPipeline
+from scrapy.exceptions import DropItem  # type: ignore
+from scrapy.pipelines.images import ImagesPipeline  # type: ignore
 
 
 class BdepoPipeline(object):

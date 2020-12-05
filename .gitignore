@@ -6,3 +6,4 @@ venv/
 export/
 crawler/full/
 creds.json
+.env

@@ -4,7 +4,7 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
-import scrapy
+import scrapy  # type: ignore
 
 
 class BookItem(scrapy.Item):
