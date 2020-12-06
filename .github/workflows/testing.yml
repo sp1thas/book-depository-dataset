@@ -23,5 +23,5 @@ jobs:
     - name: Run tests
       run: |
         pip install pipenv
-        pipenv install --deploy --system
+        pipenv install --deploy --system --dev
         pipenv run pytest crawler/tests.py
