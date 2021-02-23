@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import re
+import sys
 import shutil
 from typing import Dict, List, Union, Any, Tuple, Optional
 from zipfile import ZipFile
@@ -241,7 +242,7 @@ class BookParser:
         return os.path.join(*zip_path)
 
     def zip(self):
-        with ZipFile(os.path.join(self.output_folder, "bdd.zip"), "w") as zf:
+        with ZipFile(os.path.join(self.output_folder, "bdd_0.zip"), "w") as zf:
             for filename in (
                 "authors.csv",
                 "categories.csv",
@@ -250,11 +251,23 @@ class BookParser:
                 "dataset.csv",
             ):
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
-            if self.image_folder:
-                for path, dirs, filenames in os.walk(self.image_folder):
-                    for filename in filenames:
-                        zip_path = self._extract_zip_path(os.path.join(path, filename))
-                        zf.write(os.path.join(path, filename), arcname=zip_path)
+                print(f"generated zip: 'bdd_0.zip'")
+        if self.image_folder:
+            c = 1
+            zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
+            max_zip_size = (2 * 1024 ** 3) - 1024 ** 2
+            for path, dirs, filenames in os.walk(self.image_folder):
+                for filename in filenames:
+                    zip_path = self._extract_zip_path(os.path.join(path, filename))
+                    if sys.getsizeof(zf) >= max_zip_size:
+                        print(f"generated zip: 'bdd_{c}.zip'")
+                        zf.close()
+                        c += 1
+                        zf = ZipFile(
+                            os.path.join(self.output_folder, f"bdd_{c}.zip"), "w"
+                        )
+                    zf.write(os.path.join(path, filename), arcname=zip_path)
+            zf.close()
 
     def close(self):
         """

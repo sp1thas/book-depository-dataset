@@ -10,8 +10,7 @@ from scrapy.pipelines.images import ImagesPipeline  # type: ignore
 
 
 class BdepoPipeline(object):
-    """Main pipeline class for book item parsing
-    """
+    """Main pipeline class for book item parsing"""
 
     def process_item(self, item, spider):
         _id = item["_id"]
@@ -107,8 +106,7 @@ class MongoPipeline(object):
 
 
 class FolderStructureImagePipeline(ImagesPipeline):
-    """Store Images using a folder tree structure. DEPTH attribute can be used to specify the depth of the tree.
-    """
+    """Store Images using a folder tree structure. DEPTH attribute can be used to specify the depth of the tree."""
 
     DEPTH = 3
 
