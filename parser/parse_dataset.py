@@ -242,6 +242,7 @@ class BookParser:
         return os.path.join(*zip_path)
 
     def zip(self):
+        cnt = 1
         with ZipFile(os.path.join(self.output_folder, "bdd_0.zip"), "w") as zf:
             for filename in (
                 "authors.csv",
@@ -251,22 +252,21 @@ class BookParser:
                 "dataset.csv",
             ):
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
-                print(f"generated zip: 'bdd_0.zip'")
+                print(f"generated zip: 'bdd_{cnt}.zip'")
         if self.image_folder:
-            c = 1
-            zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
-            max_zip_size = (2 * 1024 ** 3) - 1024 ** 2
+            zf = ZipFile(os.path.join(self.output_folder, f"bdd_{cnt}.zip"), "w")
+            max_zip_size = 3 * 1024 ** 3
             for path, dirs, filenames in os.walk(self.image_folder):
                 for filename in filenames:
                     zip_path = self._extract_zip_path(os.path.join(path, filename))
-                    if sys.getsizeof(zf) >= max_zip_size:
-                        print(f"generated zip: 'bdd_{c}.zip'")
-                        zf.close()
-                        c += 1
-                        zf = ZipFile(
-                            os.path.join(self.output_folder, f"bdd_{c}.zip"), "w"
-                        )
                     zf.write(os.path.join(path, filename), arcname=zip_path)
+                    if sys.getsizeof(zf) >= max_zip_size:
+                        zf.close()
+                        print(f"generated zip: 'bdd_{cnt}.zip'")
+                        cnt += 1
+                        zf = ZipFile(
+                            os.path.join(self.output_folder, f"bdd_{cnt}.zip"), "w"
+                        )
             zf.close()
 
     def close(self):
