@@ -254,6 +254,7 @@ class BookParser:
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
                 print(f"generated zip: 'bdd_{cnt}.zip'")
         if self.image_folder:
+            cnt = cnt + 1
             zf = ZipFile(os.path.join(self.output_folder, f"bdd_{cnt}.zip"), "w")
             max_zip_size = 3 * 1024 ** 3
             for path, dirs, filenames in os.walk(self.image_folder):
@@ -263,7 +264,7 @@ class BookParser:
                     if sys.getsizeof(zf) >= max_zip_size:
                         zf.close()
                         print(f"generated zip: 'bdd_{cnt}.zip'")
-                        cnt += 1
+                        cnt = cnt + 1
                         zf = ZipFile(
                             os.path.join(self.output_folder, f"bdd_{cnt}.zip"), "w"
                         )
