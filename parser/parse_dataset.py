@@ -255,7 +255,7 @@ class BookParser:
             # print(f"generated zip: 'bdd_{c}.zip'")
             if self.image_folder:
                 c += 1
-                zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
+                # zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
                 max_zip_size = 1.5 * 1024 ** 3
                 for path, dirs, filenames in os.walk(self.image_folder):
                     for filename in filenames:
