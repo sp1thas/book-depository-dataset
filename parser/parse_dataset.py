@@ -252,29 +252,29 @@ class BookParser:
                 "dataset.csv",
             ):
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
-            print(f"generated zip: 'bdd_{c}.zip'")
-        if self.image_folder:
-            c += 1
-            zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
-            max_zip_size = 1.5 * 1024 ** 3
-            for path, dirs, filenames in os.walk(self.image_folder):
-                for filename in filenames:
-                    zip_path = self._extract_zip_path(os.path.join(path, filename))
-                    zf.write(os.path.join(path, filename), arcname=zip_path)
-                    if (
-                        os.path.getsize(
-                            os.path.join(self.output_folder, f"bdd_{c}.zip")
-                        )
-                        >= max_zip_size
-                    ):
-                        zf.close()
-                        print(f"generated zip: 'bdd_{c}.zip'")
-                        del zf
-                        c += 1
-                        zf = ZipFile(
-                            os.path.join(self.output_folder, f"bdd_{c}.zip"), "w"
-                        )
-            zf.close()
+            # print(f"generated zip: 'bdd_{c}.zip'")
+            if self.image_folder:
+                c += 1
+                zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
+                max_zip_size = 1.5 * 1024 ** 3
+                for path, dirs, filenames in os.walk(self.image_folder):
+                    for filename in filenames:
+                        zip_path = self._extract_zip_path(os.path.join(path, filename))
+                        zf.write(os.path.join(path, filename), arcname=zip_path)
+                        # if (
+                        #     os.path.getsize(
+                        #         os.path.join(self.output_folder, f"bdd_{c}.zip")
+                        #     )
+                        #     >= max_zip_size
+                        # ):
+                        #     zf.close()
+                        #     print(f"generated zip: 'bdd_{c}.zip'")
+                        #     del zf
+                        #     c += 1
+                        #     zf = ZipFile(
+                        #         os.path.join(self.output_folder, f"bdd_{c}.zip"), "w"
+                        #     )
+            # zf.close()
 
     def close(self):
         """
