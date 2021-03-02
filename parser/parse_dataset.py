@@ -242,8 +242,11 @@ class BookParser:
         return os.path.join(*zip_path)
 
     def zip(self):
-        c = 1
-        with ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w") as zf:
+        textual_file = f"bdd_{datetime.date.today().strftime('%Y%m%d')}_text.zip"
+        image_file = f"bdd_{datetime.date.today().strftime('%Y%m%d')}_images.zip"
+        with ZipFile(
+                os.path.join(self.output_folder, textual_file), "w"
+        ) as zf:
             for filename in (
                 "authors.csv",
                 "categories.csv",
@@ -252,29 +255,15 @@ class BookParser:
                 "dataset.csv",
             ):
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
-            # print(f"generated zip: 'bdd_{c}.zip'")
-            if self.image_folder:
-                c += 1
-                # zf = ZipFile(os.path.join(self.output_folder, f"bdd_{c}.zip"), "w")
-                max_zip_size = 1.5 * 1024 ** 3
+            print(f"generated zip: {textual_file}")
+        if self.image_folder:
+            with ZipFile(
+                    os.path.join(self.output_folder, image_file), "w"
+            ) as zf:
                 for path, dirs, filenames in os.walk(self.image_folder):
                     for filename in filenames:
                         zip_path = self._extract_zip_path(os.path.join(path, filename))
                         zf.write(os.path.join(path, filename), arcname=zip_path)
-                        # if (
-                        #     os.path.getsize(
-                        #         os.path.join(self.output_folder, f"bdd_{c}.zip")
-                        #     )
-                        #     >= max_zip_size
-                        # ):
-                        #     zf.close()
-                        #     print(f"generated zip: 'bdd_{c}.zip'")
-                        #     del zf
-                        #     c += 1
-                        #     zf = ZipFile(
-                        #         os.path.join(self.output_folder, f"bdd_{c}.zip"), "w"
-                        #     )
-            # zf.close()
 
     def close(self):
         """
