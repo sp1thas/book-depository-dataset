@@ -27,8 +27,12 @@ def upgrade():
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("book_id", sa.Integer, nullable=False),
         sa.Column("place_id", sa.Integer, nullable=False),
-        sa.ForeignKeyConstraint(("book_id",), ["places.id"], name="fk_book_id"),
-        sa.ForeignKeyConstraint(("place_id",), ["places.id"], name="fk_place_id"),
+        sa.ForeignKeyConstraint(
+            ("book_id",), ["places.id"], name="fk_book_id", ondelete="CASCADE"
+        ),
+        sa.ForeignKeyConstraint(
+            ("place_id",), ["places.id"], name="fk_place_id", ondelete="CASCADE"
+        ),
     )
 
 
