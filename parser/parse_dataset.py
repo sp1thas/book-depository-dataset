@@ -4,9 +4,7 @@ import datetime
 import json
 import os
 import re
-import sys
-import shutil
-from typing import Dict, List, Union, Any, Tuple, Optional
+from typing import Dict, List, Any, Tuple, Optional, Union
 from zipfile import ZipFile
 
 import jsonlines  # type: ignore
@@ -43,17 +41,8 @@ class BookParser:
     re_w = re.compile(r"([\d.,]+)g")
     re_format = re.compile(r"\w+")
     re_id = re.compile(r"/(\d+)/")
-    re_url = re.compile(r"bookdepository.com([\w\-_\d\/]+)[\?^]?")
+    re_url = re.compile(r"bookdepository.com([\w\-_\d/]+)[?^]?")
 
-    id2author: dict = {}
-    author2id: dict = {}
-    author_id: int = 0
-    format2id: dict = {}
-    id2format: dict = {}
-    categories: dict = {}
-    format_id: int = 0
-    city_country2id: dict = {}
-    city_i: int = 0
     missing_languages: set = set()
 
     new_ugc: int = 0
@@ -99,60 +88,6 @@ class BookParser:
                     self.total_ugc += 1
 
             print("Harvested id successfully loaded")
-            for filename in (
-                "dataset.csv",
-                "authors.csv",
-                "categories.csv",
-                "places.csv",
-                "formats.csv",
-            ):
-                shutil.copy(
-                    os.path.join(self.dataset_path, filename),
-                    os.path.join(self.output_folder, filename),
-                )
-                print(
-                    "Successfully copied: {} --> {}".format(
-                        self.dataset_path, os.path.join(self.output_folder, filename)
-                    )
-                )
-            with open(os.path.join(self.output_folder, "authors.csv"), "r") as f:
-                rd = csv.reader(f)
-                for h in rd:
-                    name_2_index = {_: i for i, _ in enumerate(h)}
-                for row in rd:
-                    if row[name_2_index["author_name"]]:
-                        self.author2id[row[name_2_index["author_name"]]] = int(
-                            row[name_2_index["author_id"]]
-                        )
-            with open(os.path.join(self.output_folder, "categories.csv"), "r") as f:
-                rd = csv.reader(f)
-                for h in rd:
-                    name_2_index = {_: i for i, _ in enumerate(h)}
-                for row in rd:
-                    if row[name_2_index["category_name"]]:
-                        self.categories[row[name_2_index["category_id"]]] = row[
-                            name_2_index["category_name"]
-                        ]
-
-            with open(os.path.join(self.output_folder, "places.csv"), "r") as f:
-                rd = csv.reader(f)
-                for h in rd:
-                    name_2_index = {_: i for i, _ in enumerate(h)}
-                for row in rd:
-                    if row[name_2_index["place_name"]]:
-                        self.city_country2id[row[name_2_index["place_name"]]] = int(
-                            row[name_2_index["place_id"]]
-                        )
-
-            with open(os.path.join(self.output_folder, "formats.csv"), "r") as f:
-                rd = csv.reader(f)
-                for h in rd:
-                    name_2_index = {_: i for i, _ in enumerate(h)}
-                for row in rd:
-                    if row[name_2_index["format_name"]]:
-                        self.id2format[int(row[name_2_index["format_id"]])] = row[
-                            name_2_index["format_name"]
-                        ]
 
             self.f = open(os.path.join(self.output_folder, "dataset.csv"), "a")
             self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
@@ -163,7 +98,7 @@ class BookParser:
 
     def run(self):
         with open(self.input_file, "r") as rd:
-            for row in rd:
+            for _ in rd:
                 self.n_rows += 1
 
         with jsonlines.open(self.input_file) as rd:
@@ -177,26 +112,6 @@ class BookParser:
                     self.dupl.add(parsed["id"])
 
                 self.write_entry(parsed)
-        with open(os.path.join(self.output_folder, "authors.csv"), "w") as f:
-            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(["author_id", "author_name"])
-            for k, v in sorted(self.author2id.items(), key=lambda item: item[0]):
-                wr.writerow([v, k])
-        with open(os.path.join(self.output_folder, "categories.csv"), "w") as f:
-            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(["category_id", "category_name"])
-            for k, v in sorted(self.categories.items(), key=lambda item: item[1]):
-                wr.writerow([k, v])
-        with open(os.path.join(self.output_folder, "formats.csv"), "w") as f:
-            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(["format_id", "format_name"])
-            for k, v in sorted(self.id2format.items(), key=lambda item: item[1]):
-                wr.writerow([k, v])
-        with open(os.path.join(self.output_folder, "places.csv"), "w") as f:
-            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-            wr.writerow(["place_id", "place_name"])
-            for k, v in sorted(self.city_country2id.items(), key=lambda item: item[0]):
-                wr.writerow([v, k])
 
         with open(os.path.join(self.output_folder, "KAGGLE_README.md"), "w") as f:
             f.write(kaggle_description)
@@ -244,22 +159,12 @@ class BookParser:
     def zip(self):
         textual_file = f"bdd_{datetime.date.today().strftime('%Y%m%d')}_text.zip"
         image_file = f"bdd_{datetime.date.today().strftime('%Y%m%d')}_images.zip"
-        with ZipFile(
-                os.path.join(self.output_folder, textual_file), "w"
-        ) as zf:
-            for filename in (
-                "authors.csv",
-                "categories.csv",
-                "formats.csv",
-                "places.csv",
-                "dataset.csv",
-            ):
+        with ZipFile(os.path.join(self.output_folder, textual_file), "w") as zf:
+            for filename in ("dataset.csv",):
                 zf.write(os.path.join(self.output_folder, filename), arcname=filename)
             print(f"generated zip: {textual_file}")
         if self.image_folder:
-            with ZipFile(
-                    os.path.join(self.output_folder, image_file), "w"
-            ) as zf:
+            with ZipFile(os.path.join(self.output_folder, image_file), "w") as zf:
                 for path, dirs, filenames in os.walk(self.image_folder):
                     for filename in filenames:
                         zip_path = self._extract_zip_path(os.path.join(path, filename))
@@ -294,17 +199,6 @@ class BookParser:
         self.total_ugc += 1
         self.new_ugc += 1
         self.wr.writerow(row)
-
-    def extract_publish_place(self, place):
-        if not place:
-            return None
-        place = str(place).strip()
-        if place in self.city_country2id:
-            return self.city_country2id[place]
-        else:
-            self.city_i += 1
-            self.city_country2id[place] = self.city_i
-            return self.city_country2id[place]
 
     def extract_dimensions(
         self, dims: str
@@ -342,27 +236,6 @@ class BookParser:
             pass
         return x, y, z, w
 
-    def extract_format(self, frmt: str) -> Union[int, None]:
-        """
-        Extract format id from raw text
-
-        :param frmt: format raw text
-        :type frmt: str
-        :return: format id
-        :rtype: int
-        """
-        if not frmt:
-            return None
-
-        frmt = re.findall(self.re_format, frmt)[0]
-        if frmt in self.format2id:
-            pass
-        else:
-            self.format_id += 1
-            self.format2id[frmt] = self.format_id
-            self.id2format[self.format_id] = frmt
-        return self.format2id[frmt]
-
     def extract_lang(self, lang: str) -> Optional[List[str]]:
         """
         Extract language code from raw text
@@ -398,6 +271,21 @@ class BookParser:
             print(url)
         return None
 
+    def extract_format(self, frmt: str) -> Union[int, None]:
+        """
+        Extract format id from raw text
+        :param frmt: format raw text
+        :type frmt: str
+        :return: format id
+        :rtype: int
+        """
+        if not frmt:
+            return None
+
+        frmt = re.findall(self.re_format, frmt)
+        if frmt:
+            return frmt[0]
+
     def parse_entry(self, entry):
         """
         Parse a book entry and return in proper format
@@ -429,10 +317,7 @@ class BookParser:
         if entry.get("url"):
             entry["url"] = self.extract_relative_url(entry.pop("url"))
 
-        if entry.get("publication-city-country"):
-            entry["publication-place"] = self.extract_publish_place(
-                entry.pop("publication-city-country")
-            )
+        entry["publication-place"] = entry.get("publication-city-country", "").strip()
 
         if entry.get("images"):
             img_obj = entry["images"]
@@ -442,37 +327,15 @@ class BookParser:
                 entry["image-checksum"] = img_obj[0].get("checksum")
 
             # break
-        categories__ = []
+        # print(entry.pop('categories'))
+        categories__ = ", ".join(
+            cat["name"]
+            for cat in (
+                sorted(entry.pop("categories", []), key=lambda x: x.pop("id", None))
+            )
+        )
 
-        categories_labels = entry.pop("categories", [])
-        if categories_labels:
-            for category in categories_labels:
-                if category["id"] in self.categories:
-                    pass
-                else:
-                    self.categories[category["id"]] = category["name"]
-                if category["id"] not in categories__:
-                    categories__.append(category["id"])
-        else:
-            pass
-
-        authors__ = []
-
-        authors_labels = entry.pop("authors", [])
-
-        if authors_labels:
-            for author in authors_labels:
-                if author in self.author2id:
-                    pass
-                else:
-                    self.author_id += 1
-                    self.author2id[author] = self.author_id
-                    self.id2author[self.author_id] = author
-
-                if self.author2id[author] not in authors__:
-                    authors__.append(self.author2id[author])
-        else:
-            pass
+        authors__ = ", ".join(sorted(_.strip() for _ in entry.pop("authors", [])))
 
         if "ISBN10" in entry:
             entry["isbn10"] = entry.pop("ISBN10")
