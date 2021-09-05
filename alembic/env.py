@@ -1,23 +1,17 @@
 from logging.config import fileConfig
-import os
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from db.config import url
+from db.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 # set up database connection URL
-url = "{}://{}:{}@{}:{}/{}".format(
-    os.environ["DB_DRIVER"],
-    os.environ["DB_USERNAME"],
-    os.environ["DB_PASSWORD"],
-    os.environ["DB_HOST"],
-    os.environ["DB_PORT"],
-    os.environ["DB_NAME"],
-)
 config.set_main_option("sqlalchemy.url", url)
 
 # Interpret the config file for Python logging.
@@ -28,7 +22,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
