@@ -1141,7 +1141,7 @@ use_chardet_on_py3 = ["chardet (>=3.0.2,<5)"]
 
 [[package]]
 name = "scrapy"
-version = "1.8.0"
+version = "1.8.1"
 description = "A high-level Web Crawling and Web Scraping framework"
 category = "main"
 optional = false
@@ -1450,7 +1450,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "fdca6d14c1cd02f11f539cb14d9432dce8daa81ffe7b2849ca671d6caf138b35"
+content-hash = "2d21d53a6a8883b1a8337c8d000a7ffdc9ff80d792b6dcb7e74c3eb0775c8e80"
 
 [metadata.files]
 alembic = [
@@ -2349,8 +2349,8 @@ requests = [
     {file = "requests-2.26.0.tar.gz", hash = "sha256:b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"},
 ]
 scrapy = [
-    {file = "Scrapy-1.8.0-py2.py3-none-any.whl", hash = "sha256:4352c64c7ffc70148a7988db837bb25bccafb3350ab9c978c1f9a8930521959b"},
-    {file = "Scrapy-1.8.0.tar.gz", hash = "sha256:fe06576f9a4971de9dc0175c60fd92561e8275f2bad585c1cb5d65c5181b2db0"},
+    {file = "Scrapy-1.8.1-py2.py3-none-any.whl", hash = "sha256:809bb1e2ff5b1513369cf98a596afb7f520f862e924db95c8d9a55509d6fc5df"},
+    {file = "Scrapy-1.8.1.tar.gz", hash = "sha256:26ac0e5044c2bf6082b2e263832fe6e0806ee4b3571b0b6d024f1c289bbe2c6d"},
 ]
 send2trash = [
     {file = "Send2Trash-1.7.1-py3-none-any.whl", hash = "sha256:c20fee8c09378231b3907df9c215ec9766a84ee20053d99fbad854fe8bd42159"},
