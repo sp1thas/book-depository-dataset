@@ -7,3 +7,4 @@ export/
 crawler/full/
 creds.json
 .env
+full/
