@@ -1,5 +1,5 @@
 # Book Depository Dataset
-![Code Analysis](https://github.com/sp1thas/book-depository-dataset/workflows/Code%20Analysis/badge.svg) ![python-version](https://img.shields.io/badge/python-3.5%2B-blue) [![kaggle-dataset](https://img.shields.io/badge/KAGGLE_DATASET-20beff)](https://www.kaggle.com/sp1thas/book-depository-dataset/) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![Code Analysis](https://github.com/sp1thas/book-depository-dataset/workflows/Code%20Analysis/badge.svg) ![python-version](https://img.shields.io/badge/python-3.9-blue) [![kaggle-dataset](https://img.shields.io/badge/KAGGLE_DATASET-20beff)](https://www.kaggle.com/sp1thas/book-depository-dataset/) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 The source code of `Book Depository Dataset`. Here you will find the implementation for data extraction (scrapy spider), parsing and EDA.
 
