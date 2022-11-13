@@ -8,7 +8,7 @@ from sqlalchemy import (
     Date,
     ForeignKey,
     UniqueConstraint,
-    Text
+    Text,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.expression import func
