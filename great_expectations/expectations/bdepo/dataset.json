@@ -1,0 +1,35 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "bdepo.dataset",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "authors",
+        "mostly": 0.99
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_json_parseable",
+      "kwargs": {
+        "column": "authors"
+      }
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "citations": [
+      {
+        "batch_request": {
+          "data_asset_name": "dataset.csv",
+          "data_connector_name": "default_inferred_data_connector_name",
+          "datasource_name": "bdepo",
+          "limit": 1000
+        },
+        "citation_date": "2022-11-20T19:50:14.189184Z",
+        "comment": "Created suite added via CLI"
+      }
+    ],
+    "great_expectations_version": "0.15.34"
+  }
+}
