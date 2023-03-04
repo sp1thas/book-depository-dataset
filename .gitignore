@@ -8,3 +8,5 @@ crawler/full/
 creds.json
 .env
 full/
+.pytest_cache/
+.mypy_cache/

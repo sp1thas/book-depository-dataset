@@ -27,7 +27,7 @@ datasources:
             - data_asset_name
           pattern: (.*\.csv)
         name: default_inferred_data_connector_name
-        base_directory: ../data
+        base_directory: ../data/raw
         module_name: great_expectations.datasource.data_connector
       default_runtime_data_connector_name:
         class_name: RuntimeDataConnector
