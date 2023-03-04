@@ -1,4 +1,5 @@
 # Book Depository Dataset
+
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sp1thas/book-depository-dataset/master.svg)](https://results.pre-commit.ci/latest/github/sp1thas/book-depository-dataset/master)
 ![python-version](https://img.shields.io/badge/python-3.9-blue)
 [![kaggle-dataset](https://img.shields.io/badge/KAGGLE_DATASET-20beff)](https://www.kaggle.com/sp1thas/book-depository-dataset/)
@@ -10,15 +11,16 @@ Dataset is also available [here](https://www.kaggle.com/sp1thas/book-depository-
 
 ## Project Structure
 
- * **crawler**: scrapy crawler for data extraction
+- **crawler**: scrapy crawler for data extraction
 
- * **parser**: python script for data transformation and dataset creation
+- **parser**: python script for data transformation and dataset creation
 
- * **eda**: Exploratory Data Analysis on dataset
+- **eda**: Exploratory Data Analysis on dataset
 
 ## Step to reproduce
- 1. Run scrapy crawler in order to retrieve data from `bookdepository.com`
- 2. Run parser in order to create the dataset
+
+1.  Run scrapy crawler in order to retrieve data from `bookdepository.com`
+2.  Run parser in order to create the dataset
 
 ## Crawler
 
@@ -27,7 +29,9 @@ Dataset is also available [here](https://www.kaggle.com/sp1thas/book-depository-
 This scrapy project is used to extract the majority of books from [bookdepository.com](https://bookdepository.com). If you want to extract the data on your own, please keep settings file as is.
 
 ### Usage
+
 Use crawler as a common scrapy project:
+
 ```bash
 poetry run scrapy crawl bdepobooks -o data/raw/textual/books.jsonlines
 ```
@@ -55,6 +59,7 @@ optional arguments:
 ```
 
 ### Working example
+
 ```bash
 poetry run python src/parser/parse_dataset.py \
                   --input-jsonb data/raw/textual/books.jsonlines \
@@ -64,8 +69,8 @@ poetry run python src/parser/parse_dataset.py \
 
 This script will create a collection of `.csv` and `.zip` files in `data/parsed/` folder.
 
-
 ## Citation
+
 ```
  @misc{simakis_2020,
 	title={Book Depository Dataset},
