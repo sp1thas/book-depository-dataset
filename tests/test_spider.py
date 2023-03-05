@@ -26,7 +26,7 @@ class SpiderTest(unittest.TestCase):
                     "https://d1w7fb2mkkr3kw.cloudfront.net/assets/images/book/lrg/9780/0995/9780099590088.jpg"
                 ],
                 "rating_avg": 4.38,
-                "price": 16.71,
+                "price": 17.08,
                 "rating_count": "\n                                    (878,589 ratings by Goodreads)\n",
                 "url": "https://www.bookdepository.com/Sapiens-Yuval-Noah-Harari/9780099590088",
                 "categories": [
