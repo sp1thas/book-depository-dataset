@@ -16,7 +16,7 @@ class SpiderTest(unittest.TestCase):
 
         res = scrapy.http.TextResponse(url, body=requests.get(url).content, request=req)
         book_item = [_ for _ in self.spider.parse_book(res)][0]
-
+        self.maxDiff = None
         book_item.pop("indexed_date")
         self.assertDictEqual(
             {
