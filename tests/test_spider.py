@@ -14,8 +14,7 @@ class SpiderTest(unittest.TestCase):
         url = "https://www.bookdepository.com/Sapiens-Yuval-Noah-Harari/9780099590088"
         req = scrapy.http.Request(url)
 
-        res = scrapy.http.TextResponse(
-            url, body=requests.get(url).content, request=req)
+        res = scrapy.http.TextResponse(url, body=requests.get(url).content, request=req)
         book_item = [_ for _ in self.spider.parse_book(res)][0]
 
         book_item.pop("indexed_date")
