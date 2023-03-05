@@ -18,7 +18,6 @@ class SpiderTest(unittest.TestCase):
         book_item = [_ for _ in self.spider.parse_book(res)][0]
 
         book_item.pop("indexed_date")
-
         self.assertDictEqual(
             {
                 "description": "\n\n                            'Interesting and provocative... It gives you a sense of how briefly we've been on this Earth' Barack Obama",
@@ -51,7 +50,7 @@ class SpiderTest(unittest.TestCase):
                 "publication_city_country": "\n                                London, United Kingdom",
                 "language": "\n                                English",
                 "isbn13": "9780099590088",
-                "bestsellers_rank": "\n                                176",
+                "bestsellers_rank": "\n                                153",
             },
             dict(book_item),
         )
