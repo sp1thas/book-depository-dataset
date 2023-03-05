@@ -16,9 +16,8 @@ class SpiderTest(unittest.TestCase):
 
         res = scrapy.http.TextResponse(url, body=requests.get(url).content, request=req)
         book_item = [_ for _ in self.spider.parse_book(res)][0]
-
+        self.maxDiff = None
         book_item.pop("indexed_date")
-
         self.assertDictEqual(
             {
                 "description": "\n\n                            'Interesting and provocative... It gives you a sense of how briefly we've been on this Earth' Barack Obama",
@@ -27,7 +26,7 @@ class SpiderTest(unittest.TestCase):
                     "https://d1w7fb2mkkr3kw.cloudfront.net/assets/images/book/lrg/9780/0995/9780099590088.jpg"
                 ],
                 "rating_avg": 4.38,
-                "price": 16.71,
+                "price": 17.08,
                 "rating_count": "\n                                    (878,589 ratings by Goodreads)\n",
                 "url": "https://www.bookdepository.com/Sapiens-Yuval-Noah-Harari/9780099590088",
                 "categories": [
@@ -51,7 +50,7 @@ class SpiderTest(unittest.TestCase):
                 "publication_city_country": "\n                                London, United Kingdom",
                 "language": "\n                                English",
                 "isbn13": "9780099590088",
-                "bestsellers_rank": "\n                                176",
+                "bestsellers_rank": "\n                                153",
             },
             dict(book_item),
         )

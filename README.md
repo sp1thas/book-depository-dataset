@@ -1,6 +1,7 @@
 # Book Depository Dataset
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sp1thas/book-depository-dataset/master.svg)](https://results.pre-commit.ci/latest/github/sp1thas/book-depository-dataset/master)
+![testing](https://github.com/sp1thas/book-depository-dataset/workflows/testing/badge.svg)
 ![python-version](https://img.shields.io/badge/python-3.9-blue)
 [![kaggle-dataset](https://img.shields.io/badge/KAGGLE_DATASET-20beff)](https://www.kaggle.com/sp1thas/book-depository-dataset/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
