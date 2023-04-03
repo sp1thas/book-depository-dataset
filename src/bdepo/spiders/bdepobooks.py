@@ -3,6 +3,7 @@ import datetime
 import logging
 import re
 from random import shuffle
+import re
 
 import scrapy  # type: ignore
 from scrapy.utils.project import get_project_settings  # type: ignore
@@ -55,6 +56,8 @@ class BdepobooksSpider(scrapy.Spider):
         "https://www.bookdepository.com/category/3098/Travel-Holiday-Guides",
     ]
     shuffle(start_urls)
+
+    RE_REF = re.compile(r'\?ref=[\w|\-]+$')
 
     def __init__(self, dev="", **kwargs):
         self.dev = bool(dev)
@@ -178,7 +181,7 @@ class BdepobooksSpider(scrapy.Spider):
                     '//span[@class="rating-count"]/text()'
                 ).extract_first(),
                 "indexed_date": datetime.datetime.now(),
-                "url": response.url,
+                "url": re.sub(self.RE_REF, '', response.url),
                 "categories": self.extract_categories(response),
                 "authors": self.extract_authors(response),
             }
