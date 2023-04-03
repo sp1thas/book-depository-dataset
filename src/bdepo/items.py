@@ -27,6 +27,7 @@ class BookItem(scrapy.Item):
     isbn13 = scrapy.Field(serialize=str)
     language = scrapy.Field(serialize=str)
     price = scrapy.Field(serialize=float)
+    currency = scrapy.Field(serialize=str)
     publication_city_country = scrapy.Field(serialize=str)
     publication_date = scrapy.Field(serialize=str)
     publisher = scrapy.Field(serialize=str)
