@@ -153,11 +153,14 @@ class BdepobooksSpider(scrapy.Spider):
         ).get()
         price = response.xpath('//span[@class="sale-price"]/text()').get()
         if price:
+            price, currency = price.split()
+            currency = {"€": "euro"}[currency.strip()]
             try:
                 price = float(re.findall(r"\d+\.\d+", price.replace(",", "."))[0])
             except Exception as e:
                 print(e)
                 price = None
+                currency = None
         else:
             price = None
 
@@ -174,6 +177,7 @@ class BdepobooksSpider(scrapy.Spider):
         book.update(
             {
                 "price": price,
+                "currency": currency,
                 "rating_avg": rating_avg,
                 "rating_count": response.xpath(
                     '//span[@class="rating-count"]/text()'
