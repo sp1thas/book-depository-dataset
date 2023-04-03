@@ -3,7 +3,6 @@ import datetime
 import logging
 import re
 from random import shuffle
-import re
 
 import scrapy  # type: ignore
 from scrapy.utils.project import get_project_settings  # type: ignore
@@ -57,7 +56,7 @@ class BdepobooksSpider(scrapy.Spider):
     ]
     shuffle(start_urls)
 
-    RE_REF = re.compile(r'\?ref=[\w|\-]+$')
+    RE_REF = re.compile(r"\?ref=[\w|\-]+$")
 
     def __init__(self, dev="", **kwargs):
         self.dev = bool(dev)
@@ -103,9 +102,7 @@ class BdepobooksSpider(scrapy.Spider):
             yield scrapy.Request(url=book_url, callback=self.parse_book)
 
         next_href = (
-            None
-            if self.dev
-            else response.xpath('//li[@id="next-top"]/a/@href').get()
+            None if self.dev else response.xpath('//li[@id="next-top"]/a/@href').get()
         )
         if next_href and not self.dev:
             yield scrapy.Request(
@@ -143,15 +140,16 @@ class BdepobooksSpider(scrapy.Spider):
 
     def parse_book(self, response):
         book = BookItem()
-        book["description"] = response.xpath('//div[@class="item-description"]/div/text()').getall()
+        book["description"] = response.xpath(
+            '//div[@class="item-description"]/div/text()'
+        ).getall()
         book["title"] = response.xpath("//h1/text()").get()
-        book["image_urls"] = [
-            response.xpath('//div[@class="item-img-content"]/img/@src').getall()
-        ]
-        rating_avg = response.xpath(
-            '//span[@itemprop="ratingValue"]/text()'
-        ).get()
+        book["image_urls"] = response.xpath(
+            '//div[@class="item-img-content"]/img/@src'
+        ).getall()
+        rating_avg = response.xpath('//span[@itemprop="ratingValue"]/text()').get()
         price = response.xpath('//span[@class="sale-price"]/text()').get()
+        currency = None
         if price:
             price, currency = price.split()
             currency = {"€": "euro"}[currency.strip()]
@@ -183,7 +181,7 @@ class BdepobooksSpider(scrapy.Spider):
                     '//span[@class="rating-count"]/text()'
                 ).get(),
                 "indexed_date": datetime.datetime.now(),
-                "url": re.sub(self.RE_REF, '', response.url),
+                "url": re.sub(self.RE_REF, "", response.url),
                 "categories": self.extract_categories(response),
                 "authors": self.extract_authors(response),
             }
