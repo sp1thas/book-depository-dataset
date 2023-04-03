@@ -151,9 +151,9 @@ class BdepobooksSpider(scrapy.Spider):
         price = response.xpath('//span[@class="sale-price"]/text()').get()
         currency = None
         if price:
+            currency = "euro" if price and "€" in price else None
             try:
                 price = float(re.findall(r"\d+\.\d+", price.replace(",", "."))[0])
-                currency = "euro" if price and "€" in price else None
             except Exception as e:
                 print(e)
                 price = None
