@@ -144,6 +144,7 @@ class BdepobooksSpider(scrapy.Spider):
             '//div[@class="item-description"]/div/text()'
         ).getall()
         book["title"] = response.xpath("//h1/text()").get()
+
         book["image_urls"] = response.xpath(
             '//div[@class="item-img-content"]/img/@src'
         ).getall()
