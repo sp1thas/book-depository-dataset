@@ -3,7 +3,6 @@ import datetime
 import logging
 import re
 from random import shuffle
-import re
 
 import scrapy  # type: ignore
 from scrapy.utils.project import get_project_settings  # type: ignore
@@ -145,14 +144,15 @@ class BdepobooksSpider(scrapy.Spider):
             '//div[@class="item-description"]/div/text()'
         ).getall()
         book["title"] = response.xpath("//h1/text()").get()
-        book["image_urls"] = [
-            response.xpath('//div[@class="item-img-content"]/img/@src').getall()
-        ]
+
+        book["image_urls"] = response.xpath(
+            '//div[@class="item-img-content"]/img/@src'
+        ).getall()
         rating_avg = response.xpath('//span[@itemprop="ratingValue"]/text()').get()
         price = response.xpath('//span[@class="sale-price"]/text()').get()
+        currency = None
         if price:
-            price, currency = price.split()
-            currency = {"€": "euro"}[currency.strip()]
+            currency = "euro" if price and "€" in price else None
             try:
                 price = float(re.findall(r"\d+\.\d+", price.replace(",", "."))[0])
             except Exception as e:
