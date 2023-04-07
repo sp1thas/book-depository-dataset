@@ -82,6 +82,12 @@ This script will create a collection of `.csv` and `.zip` files in `data/parsed/
 	year={2020}
 }
 ```
+## Sponsor
+
+A shout-out for the sponsors of this project:
+
+ - Konrad Mazanowski [@konradm](https://github.com/konradm)
+
 
 ## Disclaimer
 
