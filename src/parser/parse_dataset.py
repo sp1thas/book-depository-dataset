@@ -386,6 +386,10 @@ class BookParser:
 
         if entry.get("_id"):
             entry["id"] = entry.pop("_id")
+        if entry.get("description"):
+            entry["description"] = "\n".join(
+                l.strip() for l in entry["descitpion"] if l
+            )
         if entry.get("indexed-date"):
             entry["index-date"] = entry.pop("indexed-date")
         if entry.get("indexed_date"):

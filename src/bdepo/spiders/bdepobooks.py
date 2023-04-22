@@ -56,6 +56,8 @@ class BdepobooksSpider(scrapy.Spider):
     ]
     shuffle(start_urls)
 
+    RE_REF = re.compile(r"\?ref=[\w|\-]+$")
+
     def __init__(self, dev="", **kwargs):
         self.dev = bool(dev)
         if dev:
@@ -100,9 +102,7 @@ class BdepobooksSpider(scrapy.Spider):
             yield scrapy.Request(url=book_url, callback=self.parse_book)
 
         next_href = (
-            None
-            if self.dev
-            else response.xpath('//li[@id="next-top"]/a/@href').extract_first()
+            None if self.dev else response.xpath('//li[@id="next-top"]/a/@href').get()
         )
         if next_href and not self.dev:
             yield scrapy.Request(
@@ -122,15 +122,15 @@ class BdepobooksSpider(scrapy.Spider):
     @staticmethod
     def extract_categories(response):
         ucats = set()
-        t = response.xpath('//ol[@class="breadcrumb"]/li[1]/text()').extract_first()
+        t = response.xpath('//ol[@class="breadcrumb"]/li[1]/text()').get()
         if "Categories:" not in t:
             logging.warning("different breadcrumb type: {}".format(t))
             return []
 
         categories = []
         for category in response.xpath('//ol[@class="breadcrumb"]/li/a'):
-            category_name = category.xpath("./text()").extract_first()
-            category_url = category.xpath("./@href").extract_first()
+            category_name = category.xpath("./text()").get()
+            category_url = category.xpath("./@href").get()
             category_id = int(re.findall(r"category/(\d+)", category_url)[0])
             if category_id in ucats:
                 continue
@@ -142,21 +142,23 @@ class BdepobooksSpider(scrapy.Spider):
         book = BookItem()
         book["description"] = response.xpath(
             '//div[@class="item-description"]/div/text()'
-        ).extract_first()
-        book["title"] = response.xpath("//h1/text()").extract_first()
-        book["image_urls"] = [
-            response.xpath('//div[@class="item-img-content"]/img/@src').extract_first()
-        ]
-        rating_avg = response.xpath(
-            '//span[@itemprop="ratingValue"]/text()'
-        ).extract_first()
-        price = response.xpath('//span[@class="sale-price"]/text()').extract_first()
+        ).getall()
+        book["title"] = response.xpath("//h1/text()").get()
+
+        book["image_urls"] = response.xpath(
+            '//div[@class="item-img-content"]/img/@src'
+        ).getall()
+        rating_avg = response.xpath('//span[@itemprop="ratingValue"]/text()').get()
+        price = response.xpath('//span[@class="sale-price"]/text()').get()
+        currency = None
         if price:
+            currency = "euro" if price and "€" in price else None
             try:
                 price = float(re.findall(r"\d+\.\d+", price.replace(",", "."))[0])
             except Exception as e:
                 print(e)
                 price = None
+                currency = None
         else:
             price = None
 
@@ -173,12 +175,13 @@ class BdepobooksSpider(scrapy.Spider):
         book.update(
             {
                 "price": price,
+                "currency": currency,
                 "rating_avg": rating_avg,
                 "rating_count": response.xpath(
                     '//span[@class="rating-count"]/text()'
-                ).extract_first(),
+                ).get(),
                 "indexed_date": datetime.datetime.now(),
-                "url": response.url,
+                "url": re.sub(self.RE_REF, "", response.url),
                 "categories": self.extract_categories(response),
                 "authors": self.extract_authors(response),
             }
@@ -190,11 +193,11 @@ class BdepobooksSpider(scrapy.Spider):
             book["_id"] = _id
 
             for item in response.xpath('//ul[@class="biblio-info"]/li'):
-                label = item.xpath("./label/text()").extract_first()
+                label = item.xpath("./label/text()").get()
                 if label is not None:
                     label = slugify(label.lower().strip()).replace("-", "_")
                 else:
                     continue
-                value = item.xpath("./span/text()").extract_first()
+                value = item.xpath("./span/text()").get()
                 book.update({label: value})
             yield book
