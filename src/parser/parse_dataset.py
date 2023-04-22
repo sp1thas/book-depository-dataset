@@ -73,33 +73,108 @@ class BookParser:
         self.image_folder = image_folder
         self.output_folder = output_folder
         self.dataset_path = dataset
-        self.harvested = set()
+        self.harvested: set = set()
 
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
-        if self.dataset_path and os.path.exists(self.dataset_path):
-            with open(os.path.join(self.dataset_path, "dataset.csv"), "r") as f:
-                rd = csv.reader(f)
-                for header in rd:
-                    break
-                self.col_to_index = {_: i for i, _ in enumerate(header)}
-                for row in rd:
-                    self.harvested.add(int(row[self.col_to_index["id"]]))
-                    self.total_ugc += 1
 
-            print("Harvested id successfully loaded")
+        self.f = open(os.path.join(self.output_folder, "dataset.csv"), "w")
+        self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
+        self.wr.writerow([_ for _ in keep_cols])
 
-            self.f = open(os.path.join(self.output_folder, "dataset.csv"), "a")
-            self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
+    def load_authors(self):
+        self.f_authors = open(os.path.join(self.output_folder, "authors.csv"), "w")
+        self.wr_authors = csv.writer(self.f_authors, quoting=csv.QUOTE_ALL)
+        self.wr_authors.writerow(["author_id", "author_name"])
+        self.author_map = {}
+        if self.dataset_path:
+            with open(os.path.join(self.dataset_path, "authors.csv"), "r") as f:
+                for id, name in csv.reader(f):
+                    if id == "author_id":
+                        continue
+                    self.author_map[name] = int(id)
+                    self.wr_authors.writerow([id, name])
+            self.max_author_id = max(self.author_map.values())
         else:
-            self.f = open(os.path.join(self.output_folder, "dataset.csv"), "w")
-            self.wr = csv.writer(self.f, quoting=csv.QUOTE_ALL)
-            self.wr.writerow([_ for _ in keep_cols])
+            self.max_author_id = 1
+
+    def load_categories(self):
+        self.f_categories = open(
+            os.path.join(self.output_folder, "categories.csv"), "w"
+        )
+        self.wr_categories = csv.writer(self.f_categories, quoting=csv.QUOTE_ALL)
+        self.wr_categories.writerow(["category_id", "category_name"])
+        self.category_map = {}
+        if self.dataset_path:
+            with open(os.path.join(self.dataset_path, "categories.csv"), "r") as f:
+                for id, name in csv.reader(f):
+                    if id == "category_id":
+                        continue
+                    self.category_map[name] = int(id)
+                    self.wr_categories.writerow([id, name])
+            self.max_category_id = max(self.category_map.values())
+        else:
+            self.max_category_id = 1
+
+    def load_formats(self):
+        self.f_formats = open(os.path.join(self.output_folder, "formats.csv"), "w")
+        self.wr_formats = csv.writer(self.f_formats, quoting=csv.QUOTE_ALL)
+        self.wr_formats.writerow(["format_id", "format_name"])
+        self.format_map = {}
+        if self.dataset_path:
+            with open(os.path.join(self.dataset_path, "formats.csv"), "r") as f:
+                for id, name in csv.reader(f):
+                    if id == "format_id":
+                        continue
+                    self.format_map[name] = int(id)
+                    self.wr_formats.writerow([id, name])
+            self.max_format_id = max(self.format_map.values())
+        else:
+            self.max_format_id = 1
+
+    def add_authors(self, authors) -> List[int]:
+        ids = []
+        for author in authors:
+            if author in self.author_map:
+                ids.append(self.author_map[author])
+                continue
+            self.max_author_id += 1
+            self.author_map[author] = self.max_author_id
+            self.wr_authors.writerow([self.max_author_id, author])
+            ids.append(self.author_map[author])
+        return ids
+
+    def add_categories(self, categories) -> List[int]:
+        ids = []
+        for category in categories:
+            if category in self.category_map:
+                ids.append(self.category_map[category])
+                continue
+            self.max_category_id += 1
+            self.category_map[category] = self.max_category_id
+            self.wr_categories.writerow([self.max_category_id, category])
+            ids.append(self.category_map[category])
+        return ids
+
+    def add_formats(self, format: str) -> int:
+        format_id = None
+        if format in self.format_map:
+            format_id = self.format_map[format]
+            return format_id
+        self.max_format_id += 1
+        self.format_map[format] = self.max_format_id
+        self.wr_formats.writerow([self.max_format_id, format])
+        format_id = self.format_map[format]
+        return format_id
 
     def run(self):
         with open(self.input_file, "r") as rd:
             for _ in rd:
                 self.n_rows += 1
+
+        self.load_categories()
+        self.load_formats()
+        self.load_authors()
 
         with jsonlines.open(self.input_file) as rd:
             for row in tqdm(rd, total=self.n_rows):
@@ -112,6 +187,16 @@ class BookParser:
                     self.dupl.add(parsed["id"])
 
                 self.write_entry(parsed)
+
+        if self.dataset_path:
+            with open(os.path.join(self.dataset_path, "dataset.csv"), "r") as f:
+                rd = csv.reader(f)
+                for header in rd:
+                    break
+                self.col_to_index = {_: i for i, _ in enumerate(header)}
+                for row in rd:
+                    entry = {n: row[i] for n, i in self.col_to_index.items()}
+                    self.write_entry(entry, processed=True, new_content=False)
 
         with open(os.path.join(self.output_folder, "KAGGLE_README.md"), "w") as f:
             f.write(kaggle_description)
@@ -176,28 +261,33 @@ class BookParser:
         :return:
         """
         self.f.close()
+        self.f_formats.close()
+        self.f_authors.close()
+        self.f_categories.close()
 
     def extract_relative_url(self, url):
         if url:
             return re.findall(self.re_url, url)[0]
 
-    def write_entry(self, entry: Dict[str, Any]):
+    def write_entry(self, entry: Dict[str, Any], processed=False, new_content=True):
         row = []
-        if isinstance(entry.get("dimensions"), str):
-            _ = self.extract_dimensions(entry["dimensions"])
-            entry["dimensions"], entry["weight"] = _[:4], _[4]
-        for k, v in entry.pop("dimensions", {}).items():
-            entry["dimension_{}".format(k)] = v
+        if processed is False:
+            if isinstance(entry.get("dimensions"), str):
+                _ = self.extract_dimensions(entry["dimensions"])
+                entry["dimensions"], entry["weight"] = _[:4], _[4]
+            for k, v in entry.pop("dimensions", {}).items():
+                entry["dimension_{}".format(k)] = v
 
         if int(entry["id"]) in self.harvested:
             return
+        self.harvested.add(int(entry["id"]))
         for k in keep_cols:
             v = entry.get(k)
             if isinstance(v, (list, dict)):
                 v = json.dumps(v)
             row.append(v)
         self.total_ugc += 1
-        self.new_ugc += 1
+        self.new_ugc += int(new_content)
         self.wr.writerow(row)
 
     def extract_dimensions(
@@ -280,8 +370,7 @@ class BookParser:
         :rtype: str
         """
         if frmt and (frmt_matches := re.findall(self.re_format, frmt)):
-            return str(frmt_matches[0])
-
+            return json.dumps(self.add_formats(frmt_matches[0]))
         return None
 
     def parse_entry(self, entry):
@@ -293,29 +382,38 @@ class BookParser:
         :return: book entry in proper format
         :rtype: dict
         """
+        entry["description"] = entry["description"].strip()
+
         if entry.get("_id"):
             entry["id"] = entry.pop("_id")
         if entry.get("indexed-date"):
             entry["index-date"] = entry.pop("indexed-date")
+        if entry.get("indexed_date"):
+            entry["index-date"] = entry.pop("indexed_date")
         if not entry["id"]:
             entry["id"] = self.extract_id(entry["url"])
         if entry.get("rating-avg", None) is None:
             entry["rating-avg"] = None
         else:
             entry["rating-avg"] = float(entry["rating-avg"])
-        if entry.get("rating-count") is None:
-            pass
-        else:
-            entry["rating-count"] = int(entry["rating-count"])
-        if entry.get("bestsellers-rank") is None:
-            pass
-        else:
-            entry["bestsellers-rank"] = int(entry["bestsellers-rank"])
+        if rating_count := entry.pop("rating_count"):
+            try:
+                entry["rating-count"] = int(re.findall(r"\d+", rating_count)[0])
+            except:
+                entry["rating-count"] = None
+
+        if bestsellers_rank := entry.pop("bestsellers_rank", None):
+            entry["bestsellers-rank"] = int(bestsellers_rank.strip().replace(",", ""))
 
         if entry.get("url"):
             entry["url"] = self.extract_relative_url(entry.pop("url"))
 
-        entry["publication-place"] = entry.get("publication-city-country", "").strip()
+        if entry.get("price"):
+            entry["price"] = float(entry["price"])
+        else:
+            entry["price"] = None
+
+        entry["publication-place"] = entry.get("publication_city_country", "").strip()
 
         if entry.get("images"):
             img_obj = entry["images"]
@@ -326,14 +424,20 @@ class BookParser:
 
             # break
         # print(entry.pop('categories'))
-        categories__ = ", ".join(
-            cat["name"]
-            for cat in (
-                sorted(entry.pop("categories", []), key=lambda x: x.pop("id", None))
+        categories__ = json.dumps(
+            self.add_categories(
+                [
+                    cat["name"]
+                    for cat in (
+                        sorted(
+                            entry.pop("categories", []), key=lambda x: x.pop("id", None)
+                        )
+                    )
+                ]
             )
         )
 
-        authors__ = ", ".join(sorted(_.strip() for _ in entry.pop("authors", [])))
+        authors__ = json.dumps(self.add_authors(entry.pop("authors", [])))
 
         if "ISBN10" in entry:
             entry["isbn10"] = entry.pop("ISBN10")
@@ -347,16 +451,13 @@ class BookParser:
             entry["weight"],
         ) = self.extract_dimensions(entry.pop("dimensions", ""))
 
-        try:
-            entry["publication-date"] = (
-                datetime.datetime.strptime(
-                    entry["publication-date"], "%Y-%m-%d %H:%M:%S"
-                ).strftime("%Y-%m-%d")
-                if entry.get("publication-date")
-                else None
-            )
-        except:
-            entry["publication-date"] = None
+        entry["publication-date"] = (
+            datetime.datetime.strptime(
+                entry.pop("publication_date"), "%d %b %Y"
+            ).strftime("%Y-%m-%d %H:%M:%S")
+            if entry.get("publication_date")
+            else None
+        )
 
         entry.update(
             {
