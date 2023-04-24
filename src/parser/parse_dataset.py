@@ -506,9 +506,8 @@ def argparsing():
         "--output-folder",
         dest="out",
         help="Output folder path",
-        required=False,
+        required=True,
         type=str,
-        default="../export",
     )
     argus.add_argument("-d", "--dataset", help="Existing dataset", required=False)
     return argus.parse_args()
