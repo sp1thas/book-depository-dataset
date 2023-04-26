@@ -40,6 +40,7 @@ typing-extensions = "^3.10.0"
 Pillow = "^9.0.1"
 great-expectations = "^0.15.34"
 scrapy3 = ">=1.0.0"
+kaggle = "^1.5.13"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"

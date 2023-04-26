@@ -1,4 +1,3 @@
-import argparse
 import csv
 import datetime
 import json
@@ -144,16 +143,17 @@ class BookParser:
             ids.append(self.author_map[author])
         return ids
 
-    def add_categories(self, categories) -> List[int]:
+    def add_categories(self, categories: List[dict]) -> List[int]:
         ids = []
         for category in categories:
-            if category in self.category_map:
-                ids.append(self.category_map[category])
+            name = category["name"]
+            _id = category["id"]
+            if name in self.category_map:
+                ids.append(self.category_map[name])
                 continue
-            self.max_category_id += 1
-            self.category_map[category] = self.max_category_id
-            self.wr_categories.writerow([self.max_category_id, category])
-            ids.append(self.category_map[category])
+            self.category_map[name] = int(_id)
+            self.wr_categories.writerow([int(_id), name])
+            ids.append(self.category_map[name])
         return ids
 
     def add_formats(self, format: str) -> int:
@@ -196,6 +196,7 @@ class BookParser:
                 self.col_to_index = {_: i for i, _ in enumerate(header)}
                 for row in rd:
                     entry = {n: row[i] for n, i in self.col_to_index.items()}
+                    entry["index-date"] = datetime.date(2021, 10, 1).isoformat()
                     self.write_entry(entry, processed=True, new_content=False)
 
         with open(os.path.join(self.output_folder, "KAGGLE_README.md"), "w") as f:
@@ -382,14 +383,17 @@ class BookParser:
         :return: book entry in proper format
         :rtype: dict
         """
-        entry["description"] = entry["description"].strip()
-
         if entry.get("_id"):
             entry["id"] = entry.pop("_id")
         if entry.get("description"):
             entry["description"] = "\n".join(
-                l.strip() for l in entry["descitpion"] if l
+                re.sub(r"\s\s+", "", l) for l in entry["description"] if l
             )
+        else:
+            entry["description"] = ""
+
+        entry["description"] = entry["description"].strip()
+
         if entry.get("indexed-date"):
             entry["index-date"] = entry.pop("indexed-date")
         if entry.get("indexed_date"):
@@ -428,18 +432,7 @@ class BookParser:
 
             # break
         # print(entry.pop('categories'))
-        categories__ = json.dumps(
-            self.add_categories(
-                [
-                    cat["name"]
-                    for cat in (
-                        sorted(
-                            entry.pop("categories", []), key=lambda x: x.pop("id", None)
-                        )
-                    )
-                ]
-            )
-        )
+        categories__ = json.dumps(self.add_categories(entry.pop("categories", [])))
 
         authors__ = json.dumps(self.add_authors(entry.pop("authors", [])))
 
@@ -483,43 +476,3 @@ class BookParser:
         entry = {k: v for k, v in entry.items() if k in keep_cols}
 
         return entry
-
-
-def argparsing():
-    argus = argparse.ArgumentParser()
-    argus.add_argument(
-        "--input-jsonb",
-        dest="input_jsonb",
-        help="Input file of jsonb",
-        required=True,
-        type=str,
-    )
-    argus.add_argument(
-        "--input-images",
-        dest="input_images",
-        help="Input folder with images",
-        required=False,
-        type=str,
-    )
-    argus.add_argument(
-        "-o",
-        "--output-folder",
-        dest="out",
-        help="Output folder path",
-        required=True,
-        type=str,
-    )
-    argus.add_argument("-d", "--dataset", help="Existing dataset", required=False)
-    return argus.parse_args()
-
-
-if __name__ == "__main__":
-    args = argparsing()
-    bp = BookParser(
-        input_file=args.input_jsonb,
-        output_folder=args.out,
-        dataset=args.dataset,
-        image_folder=args.input_images,
-    )
-    bp.run()
-    bp.zip()

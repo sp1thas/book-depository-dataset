@@ -1291,6 +1291,26 @@ files = [
 ]
 
 [[package]]
+name = "kaggle"
+version = "1.5.13"
+description = "Kaggle API"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "kaggle-1.5.13.tar.gz", hash = "sha256:8364c56c36125cb8195876d911d0bc9efbc173167e963b9e9ef793789ba9a7fe"},
+]
+
+[package.dependencies]
+certifi = "*"
+python-dateutil = "*"
+python-slugify = "*"
+requests = "*"
+six = ">=1.10"
+tqdm = "*"
+urllib3 = "*"
+
+[[package]]
 name = "langcodes"
 version = "3.3.0"
 description = "Tools for labeling human languages with IETF language tags"
@@ -3558,4 +3578,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "272ac74c9b90ff5f2ea20f0970868796b6d5a8257992b18491feab42f1bb37f0"
+content-hash = "3cf1b5c205817e4b89a9875952e618d05f735d60e2cdcd7283d14fd5c4114d5d"
