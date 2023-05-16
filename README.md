@@ -1,3 +1,9 @@
+<center><img src="https://media.giphy.com/media/v3GUsyBpia9Zou2Kbv/giphy.gif" alt="rip"></center>
+
+Bookdepository has been discontinued, as a result, this project is now piece of history. Don't try to scrape anything, won't work.
+
+---
+
 # Book Depository Dataset
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/sp1thas/book-depository-dataset/master.svg)](https://results.pre-commit.ci/latest/github/sp1thas/book-depository-dataset/master)
